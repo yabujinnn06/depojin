@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Camera, Download, PowerOff, Boxes, ListChecks, MinusCircle, ScanBarcode, BarChart3, Archive, Trash2, Wifi, WifiOff, Scale } from "lucide-react";
+import { ArrowLeft, Camera, Download, PowerOff, Boxes, ListChecks, MinusCircle, ScanBarcode, BarChart3, Archive, Trash2, Wifi, WifiOff } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, LogSatir, Oturum, Ozet, StokOzet, Tarama } from "../lib/api";
@@ -20,6 +20,7 @@ import BilinmeyenSeriPaneli from "../components/BilinmeyenSeriPaneli";
 import StokDetayModal from "../components/StokDetayModal";
 import SeriDetayModal from "../components/SeriDetayModal";
 import TopluIslemler from "../components/TopluIslemler";
+import PortalKarsilastirma from "../components/PortalKarsilastirma";
 import { User as UserT } from "../lib/api";
 
 export default function Sayim() {
@@ -220,38 +221,7 @@ export default function Sayim() {
             <BlurFade delay={0.2}><StatCard etiket="Kalan" deger={ozet.kalan_seri} toplam={ozet.toplam_seri} tone="warn" icon={<MinusCircle size={16} />} /></BlurFade>
           </div>
           <BlurFade delay={0.22}>
-            <div className="card p-3 sm:p-4 flex items-center gap-3 sm:gap-4 flex-wrap min-w-0">
-              <div className="flex items-center gap-2">
-                <Scale size={18} className="text-deep" />
-                <span className="text-[10px] uppercase tracking-[0.2em] text-ink/60">Portal karsilastirma</span>
-              </div>
-              <div className="flex items-center gap-6 flex-wrap">
-                <div>
-                  <div className="text-[10px] uppercase tracking-[0.16em] text-ink/55">Portalda</div>
-                  <div className="font-display text-2xl text-deep leading-none">{ozet.portal_toplam.toLocaleString("tr-TR")}</div>
-                </div>
-                <div className="text-2xl text-ink/30">→</div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-[0.16em] text-ink/55">Sayilan</div>
-                  <div className="font-display text-2xl text-good leading-none">{ozet.sayilan_seri.toLocaleString("tr-TR")}</div>
-                </div>
-                <div className="text-2xl text-ink/30">=</div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-[0.16em] text-ink/55">Fark</div>
-                  <div className={
-                    "font-display text-2xl leading-none " +
-                    (ozet.portal_fark === 0 ? "text-good"
-                      : ozet.portal_fark > 0 ? "text-warn"
-                      : "text-bad")
-                  }>
-                    {ozet.portal_fark > 0 ? "+" : ""}{ozet.portal_fark.toLocaleString("tr-TR")}
-                  </div>
-                </div>
-              </div>
-              <div className="basis-full lg:basis-auto lg:ml-auto text-xs text-ink/55 lg:max-w-xs">
-                Portalda olmasi gereken = {ozet.portal_toplam}. Eksik say ise fark eksi cikar.
-              </div>
-            </div>
+            <PortalKarsilastirma ozet={ozet} son={son} stoklar={stoklar} />
           </BlurFade>
         </>
       )}
