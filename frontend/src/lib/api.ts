@@ -196,6 +196,37 @@ export const api = {
     }).then(r => r.blob());
   },
 
+  stokEkle: (oturum_id: number, stok_kodu: string, urun_adi: string, portal_sayim = 0) =>
+    req<{ id: number; stok_kodu: string; urun_adi: string; portal_sayim: number; sonradan_eklendi: boolean }>(
+      `/api/sayim/${oturum_id}/stok`,
+      { method: "POST", body: JSON.stringify({ stok_kodu, urun_adi, portal_sayim }) }
+    ),
+  seriEkle: (stok_id: number, seri_no: string, sayildi_olarak_ekle = false) =>
+    req<any>(`/api/stok/${stok_id}/seri`,
+      { method: "POST", body: JSON.stringify({ seri_no, sayildi_olarak_ekle }) }),
+  stokSeriler: (stok_id: number) => req<any[]>(`/api/stok/${stok_id}/seriler`),
+
+  topluGiris: (oturum_id: number, satirlar: { stok_kodu: string; urun_adi?: string; seri_no: string; portal_sayim?: number }[]) =>
+    req<{ yeni_stok: number; yeni_seri: number; mukerrer: number; bos: number }>(
+      `/api/sayim/${oturum_id}/toplu-giris`,
+      { method: "POST", body: JSON.stringify({ satirlar }) }
+    ),
+  topluCikis: (oturum_id: number, seri_no_listesi: string[], not_alani?: string) =>
+    req<{ isaretlenen: number; zaten_cikis: number; bulunamadi: string[] }>(
+      `/api/sayim/${oturum_id}/toplu-cikis`,
+      { method: "POST", body: JSON.stringify({ oturum_id, seri_no_listesi, not_alani }) }
+    ),
+  topluZimmet: (oturum_id: number, seri_no_listesi: string[], kullanici_id: number, not_alani?: string) =>
+    req<{ zimmetlenen: number; zaten_zimmette: number; bulunamadi: string[]; hedef: string }>(
+      `/api/sayim/${oturum_id}/toplu-zimmet`,
+      { method: "POST", body: JSON.stringify({ oturum_id, seri_no_listesi, kullanici_id, not_alani }) }
+    ),
+  topluIade: (oturum_id: number, seri_no_listesi: string[]) =>
+    req<{ iade: number; zimmette_olmayan: number; bulunamadi: string[] }>(
+      `/api/sayim/${oturum_id}/toplu-iade`,
+      { method: "POST", body: JSON.stringify({ oturum_id, seri_no_listesi }) }
+    ),
+
   audit: (eylem?: string, kullanici_id?: number, limit = 100, offset = 0) => {
     const p = new URLSearchParams({ limit: String(limit), offset: String(offset) });
     if (eylem) p.set("eylem", eylem);

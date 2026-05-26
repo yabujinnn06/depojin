@@ -16,6 +16,8 @@ import TerminalFeed from "../components/TerminalFeed";
 import KameraTarayici from "../components/KameraTarayici";
 import { BlurFade } from "../components/magic/BlurFade";
 import CanliAkis from "../components/CanliAkis";
+import BilinmeyenSeriPaneli from "../components/BilinmeyenSeriPaneli";
+import StokDetayModal from "../components/StokDetayModal";
 
 export default function Sayim() {
   const { id } = useParams();
@@ -32,6 +34,7 @@ export default function Sayim() {
   const [busy, setBusy] = useState(false);
   const [kameraAcik, setKameraAcik] = useState(false);
   const [wsAcik, setWsAcik] = useState(false);
+  const [detayStok, setDetayStok] = useState<StokOzet | null>(null);
   const yenileRef = useRef<number | undefined>();
 
   const yenile = useCallback(async () => {
@@ -260,6 +263,14 @@ export default function Sayim() {
           <BlurFade delay={0.35}>
             <DurumKarti son={son} />
           </BlurFade>
+          {son?.durum === "bulunamadi" && aktif && (
+            <BilinmeyenSeriPaneli
+              oturumId={oturumId}
+              seri={son.seri}
+              stoklar={stoklar}
+              onBitti={() => { setSon(null); yenile(); }}
+            />
+          )}
           <BlurFade delay={0.4}>
             <div className="card overflow-hidden">
               <button
@@ -279,7 +290,7 @@ export default function Sayim() {
             </div>
           </BlurFade>
           <BlurFade delay={0.45}>
-            <StokListesi rows={stoklar} />
+            <StokListesi rows={stoklar} onSec={setDetayStok} />
           </BlurFade>
         </div>
         <div className="lg:col-span-2 space-y-4 lg:sticky lg:top-4 self-start">
@@ -288,6 +299,13 @@ export default function Sayim() {
           </BlurFade>
         </div>
       </div>
+      <StokDetayModal
+        stokId={detayStok?.id ?? null}
+        stokKodu={detayStok?.stok_kodu}
+        urunAdi={detayStok?.urun_adi}
+        portalSayim={detayStok?.portal_sayim}
+        onClose={() => setDetayStok(null)}
+      />
     </div>
   );
 }

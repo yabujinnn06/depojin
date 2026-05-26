@@ -5,7 +5,7 @@ import { StokOzet } from "../lib/api";
 import ProgressBar from "./ui/ProgressBar";
 import { cn } from "../lib/cn";
 
-export default function StokListesi({ rows }: { rows: StokOzet[] }) {
+export default function StokListesi({ rows, onSec }: { rows: StokOzet[]; onSec?: (s: StokOzet) => void }) {
   const [q, setQ] = useState("");
   const [filtre, setFiltre] = useState<"tum" | "eksik" | "tam">("tum");
 
@@ -70,8 +70,10 @@ export default function StokListesi({ rows }: { rows: StokOzet[] }) {
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.18, delay: Math.min(idx, 12) * 0.01 }}
+                  onClick={() => onSec?.(s)}
                   className={cn(
                     "border-t border-edge/40 hover:bg-cream/60 transition",
+                    onSec && "cursor-pointer",
                     tam && "bg-good/10",
                   )}
                 >

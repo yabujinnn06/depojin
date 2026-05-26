@@ -22,6 +22,7 @@ from .routers import import_excel as import_router
 from .routers import export as export_router
 from .routers import rapor as rapor_router
 from .routers import admin as admin_router
+from .routers import stok_yonetim as stok_yonetim_router
 
 
 log = logging.getLogger("rainwater")
@@ -84,6 +85,7 @@ app.include_router(import_router.router)
 app.include_router(export_router.router)
 app.include_router(rapor_router.router)
 app.include_router(admin_router.router)
+app.include_router(stok_yonetim_router.router)
 
 
 @app.get("/api/health")

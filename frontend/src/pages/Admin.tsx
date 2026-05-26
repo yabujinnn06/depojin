@@ -1,6 +1,6 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Key, Trash2, UserPlus, Power, ShieldCheck, History } from "lucide-react";
+import { Key, Trash2, UserPlus, Power, ShieldCheck, History, PackagePlus, LogOut as LogOutIcon, UserCheck, Undo2 } from "lucide-react";
 import { api, AuditSatir, Oturum, User } from "../lib/api";
 import { useToast } from "../lib/toast";
 import { useAuth } from "../lib/auth";
@@ -19,6 +19,10 @@ export default function Admin() {
   const [secOturum, setSecOturum] = useState<number | null>(null);
   const [devam, setDevam] = useState(false);
   const [yuklenen, setYuklenen] = useState<string | null>(null);
+  const [topluMetin, setTopluMetin] = useState("");
+  const [topluNot, setTopluNot] = useState("");
+  const [topluKullaniciId, setTopluKullaniciId] = useState<number | "">("");
+  const [topluSonuc, setTopluSonuc] = useState<string | null>(null);
 
   async function refresh() {
     try {
@@ -93,6 +97,66 @@ export default function Admin() {
     finally { e.target.value = ""; }
   }
 
+  function _seriListesi(): string[] {
+    return topluMetin.split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
+  }
+
+  function _giris_satirlari() {
+    const out: { stok_kodu: string; urun_adi?: string; seri_no: string; portal_sayim?: number }[] = [];
+    topluMetin.split(/\r?\n/).forEach(line => {
+      const parts = line.split(/[\t;,]/).map(p => p.trim());
+      if (parts.length >= 3) {
+        out.push({
+          stok_kodu: parts[0], urun_adi: parts[1] || undefined,
+          seri_no: parts[2], portal_sayim: Number(parts[3]) || 0,
+        });
+      }
+    });
+    return out;
+  }
+
+  async function topluGirisCalistir() {
+    if (!secOturum) { toast.push("warn", "Oturum sec"); return; }
+    const satirlar = _giris_satirlari();
+    if (!satirlar.length) { toast.push("warn", "Format: STOK,URUN,SERI,PORTAL (her satir)"); return; }
+    try {
+      const r = await api.topluGiris(secOturum, satirlar);
+      setTopluSonuc(`Giris -> stok+${r.yeni_stok}, seri+${r.yeni_seri}, mukerrer ${r.mukerrer}, bos ${r.bos}`);
+      toast.push("ok", "Toplu giris tamam"); refresh();
+    } catch (e: any) { toast.push("err", e.message); }
+  }
+  async function topluCikisCalistir() {
+    if (!secOturum) { toast.push("warn", "Oturum sec"); return; }
+    const seriler = _seriListesi();
+    if (!seriler.length) { toast.push("warn", "Seri no listesi bos"); return; }
+    try {
+      const r = await api.topluCikis(secOturum, seriler, topluNot || undefined);
+      setTopluSonuc(`Cikis -> ${r.isaretlenen} isaretlendi, ${r.zaten_cikis} zaten cikis, ${r.bulunamadi.length} bulunamadi`);
+      toast.push("ok", "Cikis tamam"); refresh();
+    } catch (e: any) { toast.push("err", e.message); }
+  }
+  async function topluZimmetCalistir() {
+    if (!secOturum) { toast.push("warn", "Oturum sec"); return; }
+    if (topluKullaniciId === "") { toast.push("warn", "Zimmet hedefi sec"); return; }
+    const seriler = _seriListesi();
+    if (!seriler.length) { toast.push("warn", "Seri no listesi bos"); return; }
+    try {
+      const r = await api.topluZimmet(secOturum, seriler, Number(topluKullaniciId), topluNot || undefined);
+      setTopluSonuc(`Zimmet (${r.hedef}) -> ${r.zimmetlenen} verildi, ${r.zaten_zimmette} zaten zimmet, ${r.bulunamadi.length} bulunamadi`);
+      toast.push("ok", "Zimmet tamam"); refresh();
+    } catch (e: any) { toast.push("err", e.message); }
+  }
+  async function topluIadeCalistir() {
+    if (!secOturum) { toast.push("warn", "Oturum sec"); return; }
+    const seriler = _seriListesi();
+    if (!seriler.length) { toast.push("warn", "Seri no listesi bos"); return; }
+    try {
+      const r = await api.topluIade(secOturum, seriler);
+      setTopluSonuc(`Iade -> ${r.iade} iade alindi, ${r.zimmette_olmayan} zimmette degildi, ${r.bulunamadi.length} bulunamadi`);
+      toast.push("ok", "Iade tamam"); refresh();
+    } catch (e: any) { toast.push("err", e.message); }
+  }
+
   return (
     <div className="space-y-6">
       <BlurFade>
@@ -155,6 +219,63 @@ export default function Admin() {
           </section>
         </BlurFade>
       </div>
+
+      <BlurFade delay={0.18}>
+        <section className="card p-4 space-y-3">
+          <h3 className="font-semibold flex items-center gap-2">
+            <PackagePlus size={16} className="text-accent" /> Toplu islemler
+          </h3>
+          <div className="grid md:grid-cols-3 gap-2 text-sm">
+            <label className="md:col-span-1">
+              <span className="text-[10px] uppercase tracking-[0.16em] text-ink/55">Oturum</span>
+              <select className="mt-1 w-full px-3 py-2 rounded-lg border border-edge bg-white"
+                value={secOturum ?? ""} onChange={e => setSecOturum(Number(e.target.value))}>
+                {oturumlar.map(o => <option key={o.id} value={o.id}>{o.ad} ({o.durum})</option>)}
+              </select>
+            </label>
+            <label className="md:col-span-1">
+              <span className="text-[10px] uppercase tracking-[0.16em] text-ink/55">Zimmet hedefi (sadece zimmet)</span>
+              <select className="mt-1 w-full px-3 py-2 rounded-lg border border-edge bg-white"
+                value={topluKullaniciId === "" ? "" : String(topluKullaniciId)}
+                onChange={e => setTopluKullaniciId(e.target.value === "" ? "" : Number(e.target.value))}>
+                <option value="">-- sec --</option>
+                {users.filter(u => u.aktif).map(u => <option key={u.id} value={u.id}>{u.ad} ({u.rol})</option>)}
+              </select>
+            </label>
+            <label className="md:col-span-1">
+              <span className="text-[10px] uppercase tracking-[0.16em] text-ink/55">Not (opsiyonel)</span>
+              <input className="mt-1 w-full px-3 py-2 rounded-lg border border-edge bg-white"
+                value={topluNot} onChange={e => setTopluNot(e.target.value)} placeholder="Cikis sebebi / zimmet aciklama" />
+            </label>
+          </div>
+          <textarea value={topluMetin} onChange={e => setTopluMetin(e.target.value)}
+            rows={6}
+            className="w-full px-3 py-2 rounded-lg border border-edge bg-white font-mono text-sm"
+            placeholder={"GIRIS icin her satir: STOK,URUN,SERI[,PORTAL]\nCIKIS/ZIMMET/IADE icin her satir: SERI"} />
+          <div className="flex gap-2 flex-wrap">
+            <button onClick={topluGirisCalistir}
+              className="btn btn-primary text-sm flex items-center gap-1.5">
+              <PackagePlus size={14} /> Toplu giris
+            </button>
+            <button onClick={topluCikisCalistir}
+              className="btn text-sm bg-bad text-white hover:bg-bad/90 flex items-center gap-1.5">
+              <LogOutIcon size={14} /> Toplu cikis
+            </button>
+            <button onClick={topluZimmetCalistir}
+              className="btn text-sm bg-accent text-white hover:bg-accent/90 flex items-center gap-1.5">
+              <UserCheck size={14} /> Toplu zimmet
+            </button>
+            <button onClick={topluIadeCalistir}
+              className="btn btn-ghost text-sm flex items-center gap-1.5">
+              <Undo2 size={14} /> Toplu iade
+            </button>
+          </div>
+          {topluSonuc && <div className="text-sm text-good break-all">{topluSonuc}</div>}
+          <div className="text-[11px] text-ink/55">
+            Giris ornek: <code className="font-mono">10036,NEW OSMOS,SR12345,15</code> · Cikis/Zimmet/Iade: her satir bir seri.
+          </div>
+        </section>
+      </BlurFade>
 
       <BlurFade delay={0.2}>
         <section className="card overflow-hidden">

@@ -42,6 +42,7 @@ class Stok(Base):
     stok_kodu: Mapped[str] = mapped_column(String(80))
     urun_adi: Mapped[str] = mapped_column(String(200))
     portal_sayim: Mapped[int] = mapped_column(Integer, default=0)
+    sonradan_eklendi: Mapped[bool] = mapped_column(Boolean, default=False)
     olusturma: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     oturum: Mapped[SayimOturumu] = relationship(back_populates="stoklar")
@@ -64,9 +65,18 @@ class Seri(Base):
     sayim_tarihi: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     sayan_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     notlar: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sonradan_eklendi: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    cikis_zaman: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    cikis_kullanici_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    cikis_notu: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    zimmet_kullanici_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    zimmet_zaman: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    zimmet_notu: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     stok: Mapped[Stok] = relationship(back_populates="seriler")
-    sayan: Mapped[User | None] = relationship()
+    sayan: Mapped[User | None] = relationship(foreign_keys=[sayan_id])
 
 
 class TaramaLog(Base):
