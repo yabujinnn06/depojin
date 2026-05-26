@@ -1,13 +1,13 @@
 import asyncio
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, status
 from sqlalchemy import select, func, and_
 from sqlalchemy.orm import Session
 
 from ..database import SessionLocal, get_db
 from ..models import SayimOturumu, Stok, Seri, TaramaLog, User
 from ..schemas import TaramaIn, TaramaOut
-from ..auth import current_user
+from ..auth import current_user, decode_token
 from ..utils import normalize_seri, candidate_seri_keys
 from ..ws import manager
 
@@ -107,20 +107,44 @@ def _islem(db: Session, oturum_id: int, user: User, seri_giris: str) -> TaramaOu
 @router.post("/tarama", response_model=TaramaOut)
 async def tarama(data: TaramaIn, db: Session = Depends(get_db), user: User = Depends(current_user)):
     sonuc = _islem(db, data.oturum_id, user, data.seri)
+    manager.update_aktivite(data.oturum_id, user.id, sonuc.seri, sonuc.durum)
     await manager.broadcast(data.oturum_id, {
         "tip": "tarama",
         "kullanici": user.ad,
+        "kullanici_id": user.id,
         "zaman": datetime.utcnow().isoformat(),
         "sonuc": sonuc.model_dump(),
     })
+    await manager.broadcast_presence(data.oturum_id)
     return sonuc
 
 
 @router.websocket("/ws/sayim/{oturum_id}")
-async def ws_oturum(ws: WebSocket, oturum_id: int):
-    await manager.connect(oturum_id, ws)
+async def ws_oturum(ws: WebSocket, oturum_id: int, token: str | None = Query(None)):
+    if not token:
+        await ws.close(code=1008)
+        return
+    try:
+        payload = decode_token(token, "access")
+        user_id = int(payload.get("sub"))
+        rol = payload.get("rol", "sayan")
+    except Exception:
+        await ws.close(code=1008)
+        return
+    db = SessionLocal()
+    try:
+        user = db.get(User, user_id)
+        if not user or not user.aktif:
+            await ws.close(code=1008)
+            return
+        ad = user.ad
+    finally:
+        db.close()
+    await manager.connect(oturum_id, ws, user_id, ad, rol)
     try:
         while True:
             await ws.receive_text()
     except WebSocketDisconnect:
-        manager.disconnect(oturum_id, ws)
+        pass
+    finally:
+        await manager.disconnect(oturum_id, ws)
