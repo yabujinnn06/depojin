@@ -32,7 +32,7 @@ export function ToastSaglayici({ children }: { children: React.ReactNode }) {
   return (
     <C.Provider value={{ push }}>
       {children}
-      <div className="fixed top-3 right-3 z-[80] flex flex-col gap-2 max-w-sm pointer-events-none">
+      <div className="fixed top-3 right-3 left-3 sm:left-auto z-[80] flex flex-col gap-2 sm:max-w-sm pointer-events-none">
         <AnimatePresence>
           {list.map(t => {
             const c = cfg[t.tip];

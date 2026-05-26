@@ -156,15 +156,15 @@ export default function Sayim() {
     <div className="space-y-5">
       <motion.header
         initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-        className="flex items-end justify-between gap-3 flex-wrap"
+        className="flex items-end justify-between gap-3 flex-wrap min-w-0"
       >
-        <div className="flex items-start gap-3">
-          <Link to="/" className="mt-1 p-2 rounded-lg border border-edge hover:bg-card transition">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          <Link to="/" className="mt-1 p-2 rounded-lg border border-edge hover:bg-card transition shrink-0">
             <ArrowLeft size={16} />
           </Link>
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="text-[10px] uppercase tracking-[0.22em] text-ink/55">Sayim Oturumu</div>
-            <h2 className="font-display text-3xl leading-tight">{oturum?.ad ?? "…"}</h2>
+            <h2 className="font-display text-2xl sm:text-3xl leading-tight truncate">{oturum?.ad ?? "…"}</h2>
             <div className="text-sm text-ink/65 mt-0.5 flex items-center gap-2 flex-wrap">
               <span>{oturum?.lokasyon ?? "-"}</span>
               <span className="opacity-30">·</span>
@@ -236,8 +236,8 @@ export default function Sayim() {
         <CanliAkis rows={log} onSec={setDetayLog} />
       </BlurFade>
 
-      <div className="grid lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-3 space-y-4">
+      <div className="grid lg:grid-cols-5 gap-4 min-w-0">
+        <div className="lg:col-span-3 space-y-4 min-w-0">
           <BlurFade delay={0.3}>
             <BarkodInput onSubmit={tara} aktif={aktif} busy={busy} />
           </BlurFade>

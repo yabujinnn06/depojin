@@ -59,7 +59,7 @@ export default function PortalKarsilastirma({ ozet, son, stoklar }: Props) {
       </div>
 
       <div className="p-3 sm:p-4 space-y-4">
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-3 min-w-0">
           <Kart
             etiket="Portalda"
             deger={ozet.portal_toplam}
@@ -151,11 +151,11 @@ function Kart({
 }: { etiket: string; deger: number; ikon?: React.ReactNode; renk: string; altYazi?: string; isaret?: boolean }) {
   const gosterilen = isaret && deger > 0 ? `+${deger}` : String(deger);
   return (
-    <div className="rounded-lg bg-cream/60 p-2 sm:p-3 ring-1 ring-edge/40">
-      <div className="flex items-center gap-1 text-[10px] uppercase tracking-[0.16em] text-ink/55">
+    <div className="rounded-lg bg-cream/60 p-2 sm:p-3 ring-1 ring-edge/40 min-w-0">
+      <div className="flex items-center gap-1 text-[10px] uppercase tracking-[0.16em] text-ink/55 truncate">
         {ikon} <span className="truncate">{etiket}</span>
       </div>
-      <div className={cn("font-display text-2xl sm:text-3xl mt-1 leading-none tabular-nums", renk)}>
+      <div className={cn("font-display text-lg sm:text-3xl mt-1 leading-none tabular-nums truncate", renk)}>
         {isaret ? (
           <span>{gosterilen.charAt(0) === "+" ? "+" : gosterilen.charAt(0) === "-" ? "-" : ""}
             <NumberTicker value={Math.abs(deger)} />

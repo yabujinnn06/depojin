@@ -164,7 +164,9 @@ export default function CanliAkis({ rows, onSec }: Props) {
             <span className="text-[10px] uppercase tracking-[0.16em] text-ink/55 self-end pb-0.5">tarama/dk</span>
           </div>
 
-          <WaveBars buckets={buckets} />
+          <div className="hidden sm:block">
+            <WaveBars buckets={buckets} />
+          </div>
 
           <div className="ml-auto flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-1.5 text-[11px] text-ink/65">
@@ -182,8 +184,8 @@ export default function CanliAkis({ rows, onSec }: Props) {
           </div>
         </div>
 
-        <div className="mt-2.5 flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1 text-[11px]">
+        <div className="mt-2.5 flex items-center gap-2 flex-wrap min-w-0">
+          <div className="flex items-center gap-1 text-[11px] overflow-x-auto pb-1 -mb-1 max-w-full">
             <FilterIcon size={12} className="text-ink/45" />
             {(["tum", "basarili", "mukerrer", "bulunamadi", "cakisma"] as FiltreTip[]).map(t => {
               const c = t === "tum" ? null : DURUM_CFG[t];

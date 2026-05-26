@@ -211,7 +211,7 @@ export default function Terminal({ rows, oturumId, baslik = "oturum", stoklar, o
       </div>
 
       <div
-        className="text-[13px] leading-[1.55] lg:h-[640px] max-h-[640px] overflow-y-auto px-3 py-3 cursor-text"
+        className="text-[12px] sm:text-[13px] leading-[1.55] h-[420px] lg:h-[640px] max-h-[640px] overflow-y-auto overflow-x-hidden px-3 py-3 cursor-text"
         style={{ background: "linear-gradient(180deg,#0c0c0c 0%,#101010 100%)" }}
         onClick={() => inputRef.current?.focus()}
       >

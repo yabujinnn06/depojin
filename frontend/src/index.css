@@ -16,6 +16,10 @@ img, svg, video { max-width: 100%; }
 table { table-layout: auto; }
 .no-x { overflow-x: hidden; }
 
+@media (max-width: 640px) {
+  .card { border-radius: 12px; }
+}
+
 * { scrollbar-width: thin; scrollbar-color: theme('colors.edge') transparent; }
 *::-webkit-scrollbar { width: 8px; height: 8px; }
 *::-webkit-scrollbar-thumb { background: theme('colors.edge'); border-radius: 4px; }
