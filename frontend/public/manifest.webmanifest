@@ -1,0 +1,19 @@
+{
+  "name": "Rainwater Sayim",
+  "short_name": "Sayim",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F4F0E8",
+  "theme_color": "#0F2A44",
+  "lang": "tr",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+  background: theme('colors.cream');
+  color: theme('colors.ink');
+  font-family: theme('fontFamily.body');
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+* { scrollbar-width: thin; scrollbar-color: theme('colors.edge') transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: theme('colors.edge'); border-radius: 4px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+h1, h2, h3 {
+  font-family: theme('fontFamily.display');
+  letter-spacing: -0.015em;
+}
+
+.card {
+  background: theme('colors.card');
+  border: 1px solid theme('colors.edge');
+  border-radius: 14px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 6px 20px -12px rgba(0,0,0,0.16);
+}
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0.5rem 0.9rem; border-radius: 10px; font-weight: 600;
+  transition: transform 50ms ease, background 150ms ease, color 150ms ease, box-shadow 150ms ease;
+  user-select: none;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: theme('colors.deep'); color: white; }
+.btn-primary:hover { background: theme('colors.deeper'); }
+.btn-accent  { background: theme('colors.accent'); color: white; }
+.btn-accent:hover { background: #a85f29; }
+.btn-ghost   { background: transparent; color: theme('colors.ink'); border: 1px solid theme('colors.edge'); }
+.btn-ghost:hover { background: theme('colors.card'); }
+
+input, select, textarea { font-family: inherit; }
