@@ -18,6 +18,7 @@ import { BlurFade } from "../components/magic/BlurFade";
 import CanliAkis from "../components/CanliAkis";
 import BilinmeyenSeriPaneli from "../components/BilinmeyenSeriPaneli";
 import StokDetayModal from "../components/StokDetayModal";
+import SeriDetayModal from "../components/SeriDetayModal";
 
 export default function Sayim() {
   const { id } = useParams();
@@ -35,6 +36,7 @@ export default function Sayim() {
   const [kameraAcik, setKameraAcik] = useState(false);
   const [wsAcik, setWsAcik] = useState(false);
   const [detayStok, setDetayStok] = useState<StokOzet | null>(null);
+  const [detayLog, setDetayLog] = useState<LogSatir | null>(null);
   const yenileRef = useRef<number | undefined>();
 
   const yenile = useCallback(async () => {
@@ -246,7 +248,7 @@ export default function Sayim() {
       )}
 
       <BlurFade delay={0.25}>
-        <CanliAkis rows={log} onPick={(seri) => tara(seri)} />
+        <CanliAkis rows={log} onSec={setDetayLog} />
       </BlurFade>
 
       <div className="grid lg:grid-cols-5 gap-4">
@@ -306,6 +308,7 @@ export default function Sayim() {
         portalSayim={detayStok?.portal_sayim}
         onClose={() => setDetayStok(null)}
       />
+      <SeriDetayModal row={detayLog} onClose={() => setDetayLog(null)} />
     </div>
   );
 }

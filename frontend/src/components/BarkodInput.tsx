@@ -17,8 +17,15 @@ export default function BarkodInput({ onSubmit, aktif = true, busy = false }: Pr
 
   useEffect(() => {
     if (!aktif) return;
-    const tut = () => { if (document.activeElement !== ref.current) ref.current?.focus(); };
-    const t = setInterval(tut, 1200);
+    const tut = () => {
+      const act = document.activeElement;
+      if (act && act !== ref.current && (
+        act.tagName === "INPUT" || act.tagName === "TEXTAREA" || act.tagName === "SELECT" ||
+        (act as HTMLElement).isContentEditable
+      )) return;
+      if (act !== ref.current) ref.current?.focus();
+    };
+    const t = setInterval(tut, 1500);
     return () => clearInterval(t);
   }, [aktif]);
 

@@ -65,10 +65,10 @@ function Sparkline({ buckets }: { buckets: number[] }) {
 
 type Props = {
   rows: LogSatir[];
-  onPick?: (giris: string) => void;
+  onSec?: (row: LogSatir) => void;
 };
 
-export default function CanliAkis({ rows, onPick }: Props) {
+export default function CanliAkis({ rows, onSec }: Props) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -169,7 +169,7 @@ export default function CanliAkis({ rows, onPick }: Props) {
                 return (
                   <button
                     key={r.id}
-                    onClick={() => onPick?.(r.seri_giris)}
+                    onClick={() => onSec?.(r)}
                     className={cn(
                       "group inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border whitespace-nowrap shrink-0",
                       "transition-all hover:scale-[1.03]",
