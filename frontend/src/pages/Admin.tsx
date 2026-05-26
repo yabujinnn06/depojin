@@ -1,6 +1,7 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Key, Trash2, UserPlus, Power, ShieldCheck, History, PackagePlus, LogOut as LogOutIcon, UserCheck, Undo2 } from "lucide-react";
+import { Key, Trash2, UserPlus, Power, ShieldCheck, PackagePlus, LogOut as LogOutIcon, UserCheck, Undo2 } from "lucide-react";
+import AuditLogPanel from "../components/AuditLogPanel";
 import { api, AuditSatir, Oturum, User } from "../lib/api";
 import { useToast } from "../lib/toast";
 import { useAuth } from "../lib/auth";
@@ -365,44 +366,7 @@ export default function Admin() {
       </BlurFade>
 
       <BlurFade delay={0.3}>
-        <section className="card overflow-hidden">
-          <div className="px-4 py-2.5 bg-deep text-white flex items-center gap-2">
-            <History size={16} />
-            <span className="text-sm font-semibold tracking-wide">AUDIT LOG</span>
-            <span className="ml-auto text-xs opacity-70 font-mono">son {audit.length}</span>
-          </div>
-          <div className="max-h-80 overflow-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-cream/80 sticky top-0">
-                <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-ink/55">
-                  <th className="px-3 py-2">Zaman</th>
-                  <th className="px-3 py-2">Kullanici</th>
-                  <th className="px-3 py-2">Eylem</th>
-                  <th className="px-3 py-2">Kaynak</th>
-                  <th className="px-3 py-2">IP</th>
-                </tr>
-              </thead>
-              <tbody>
-                {audit.map(a => (
-                  <tr key={a.id} className="border-t border-edge/40">
-                    <td className="px-3 py-1.5 font-mono text-xs text-ink/70 whitespace-nowrap">
-                      {new Date(a.zaman).toLocaleString("tr-TR")}
-                    </td>
-                    <td className="px-3 py-1.5">{a.kullanici_ad ?? "-"}</td>
-                    <td className="px-3 py-1.5 font-mono text-xs">{a.eylem}</td>
-                    <td className="px-3 py-1.5 text-xs text-ink/65">
-                      {a.kaynak_tip ? `${a.kaynak_tip}#${a.kaynak_id}` : "-"}
-                    </td>
-                    <td className="px-3 py-1.5 font-mono text-xs text-ink/55">{a.ip ?? "-"}</td>
-                  </tr>
-                ))}
-                {audit.length === 0 && (
-                  <tr><td colSpan={5} className="p-6 text-center text-ink/55">Henuz log yok.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <AuditLogPanel users={users} />
       </BlurFade>
     </div>
   );

@@ -234,4 +234,40 @@ export const api = {
     if (kullanici_id != null) p.set("kullanici_id", String(kullanici_id));
     return req<{ toplam: number; items: AuditSatir[] }>(`/api/admin/audit?${p.toString()}`);
   },
+  auditFiltre: (f: {
+    eylem?: string; kullanici_id?: number; kaynak_tip?: string;
+    oturum_id?: number; baslangic?: string; bitis?: string; q?: string;
+    limit?: number; offset?: number;
+  }) => {
+    const p = new URLSearchParams();
+    if (f.eylem) p.set("eylem", f.eylem);
+    if (f.kullanici_id != null) p.set("kullanici_id", String(f.kullanici_id));
+    if (f.kaynak_tip) p.set("kaynak_tip", f.kaynak_tip);
+    if (f.oturum_id != null) p.set("oturum_id", String(f.oturum_id));
+    if (f.baslangic) p.set("baslangic", f.baslangic);
+    if (f.bitis) p.set("bitis", f.bitis);
+    if (f.q) p.set("q", f.q);
+    p.set("limit", String(f.limit ?? 100));
+    p.set("offset", String(f.offset ?? 0));
+    return req<{ toplam: number; items: AuditSatir[] }>(`/api/admin/audit?${p.toString()}`);
+  },
+  auditEylemler: () => req<{ eylem: string; sayi: number }[]>("/api/admin/audit/eylemler"),
+  auditOturumlar: () => req<{ id: number; ad: string; lokasyon: string | null; durum: string }[]>("/api/admin/audit/oturumlar"),
+  auditExcel: (f: {
+    eylem?: string; kullanici_id?: number; kaynak_tip?: string;
+    oturum_id?: number; baslangic?: string; bitis?: string; q?: string;
+  }) => {
+    const p = new URLSearchParams();
+    if (f.eylem) p.set("eylem", f.eylem);
+    if (f.kullanici_id != null) p.set("kullanici_id", String(f.kullanici_id));
+    if (f.kaynak_tip) p.set("kaynak_tip", f.kaynak_tip);
+    if (f.oturum_id != null) p.set("oturum_id", String(f.oturum_id));
+    if (f.baslangic) p.set("baslangic", f.baslangic);
+    if (f.bitis) p.set("bitis", f.bitis);
+    if (f.q) p.set("q", f.q);
+    const t = tokens().access;
+    return fetch(`/api/admin/audit/excel?${p.toString()}`, {
+      headers: t ? { Authorization: `Bearer ${t}` } : {},
+    }).then(r => r.blob());
+  },
 };
