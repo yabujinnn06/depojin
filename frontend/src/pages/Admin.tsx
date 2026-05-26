@@ -1,6 +1,6 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Key, Trash2, UserPlus, Power, ShieldCheck, PackagePlus, LogOut as LogOutIcon, UserCheck, Undo2 } from "lucide-react";
+import { Key, Trash2, UserPlus, Power, ShieldCheck, PackagePlus, LogOut as LogOutIcon, UserCheck, Undo2, Archive } from "lucide-react";
 import AuditLogPanel from "../components/AuditLogPanel";
 import { api, AuditSatir, Oturum, User } from "../lib/api";
 import { useToast } from "../lib/toast";
@@ -349,7 +349,7 @@ export default function Admin() {
                 {o.durum === "tamamlandi" && (
                   <button onClick={() => arsivleOturum(o)} title="Arsivle"
                     className="p-2 rounded-md hover:bg-edge/30 text-ink/65">
-                    <History size={14} />
+                    <Archive size={14} />
                   </button>
                 )}
                 <button onClick={() => silOturum(o)} title="Kalici sil"
