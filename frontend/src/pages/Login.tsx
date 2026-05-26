@@ -47,8 +47,8 @@ export default function Login() {
           >
             <div className="text-center">
               <BlurFade delay={0.2} duration={0.5}>
-                <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-deep shadow-lg shadow-deep/30 p-1">
-                  <DepoJinLogo size={56} />
+                <div className="inline-flex items-center justify-center h-24 w-24 rounded-2xl bg-deep shadow-xl shadow-deep/40 p-1">
+                  <DepoJinLogo size={88} />
                 </div>
               </BlurFade>
               <BlurFade delay={0.3} duration={0.4}>

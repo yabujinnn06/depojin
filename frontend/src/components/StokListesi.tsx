@@ -49,8 +49,8 @@ export default function StokListesi({ rows, onSec }: { rows: StokOzet[]; onSec?:
           />
         </label>
       </div>
-      <div className="max-h-[460px] overflow-auto">
-        <table className="w-full text-sm">
+      <div className="max-h-[460px] overflow-auto overflow-x-auto">
+        <table className="w-full text-sm min-w-[520px]">
           <thead className="bg-cream/80 sticky top-0 z-10 backdrop-blur">
             <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-ink/55">
               <th className="px-3 py-2">Kod</th>

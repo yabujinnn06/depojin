@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Activity, CheckCircle2, AlertTriangle, XCircle, GitMerge, Clock, Radio } from "lucide-react";
+import {
+  Activity, CheckCircle2, AlertTriangle, XCircle, GitMerge,
+  Clock, Radio, Users, Filter as FilterIcon,
+} from "lucide-react";
 import { LogSatir } from "../lib/api";
 import NumberTicker from "./ui/NumberTicker";
 import { Marquee } from "./magic/Marquee";
@@ -16,11 +19,11 @@ function kullaniciRengi(ad: string): string {
   return PALET[h % PALET.length];
 }
 
-const DURUM_CFG: Record<string, { icon: any; bg: string; ring: string; dot: string; etiket: string }> = {
-  basarili:   { icon: CheckCircle2,  bg: "bg-good/12",  ring: "border-good/40 hover:border-good/70",  dot: "bg-good",  etiket: "OK"   },
-  mukerrer:   { icon: AlertTriangle, bg: "bg-warn/15",  ring: "border-warn/50 hover:border-warn/80",  dot: "bg-warn",  etiket: "DUP"  },
-  bulunamadi: { icon: XCircle,       bg: "bg-bad/12",   ring: "border-bad/40 hover:border-bad/70",    dot: "bg-bad",   etiket: "404"  },
-  cakisma:    { icon: GitMerge,      bg: "bg-warn/20",  ring: "border-warn/60 hover:border-warn/90",  dot: "bg-warn",  etiket: "CONF" },
+const DURUM_CFG: Record<string, { icon: any; bg: string; ring: string; text: string; etiket: string; filtreRenk: string }> = {
+  basarili:   { icon: CheckCircle2,  bg: "bg-good/12",  ring: "border-good/40 hover:border-good/70",  text: "text-good", etiket: "OK",   filtreRenk: "bg-good/30 text-good" },
+  mukerrer:   { icon: AlertTriangle, bg: "bg-warn/15",  ring: "border-warn/50 hover:border-warn/80",  text: "text-warn", etiket: "DUP",  filtreRenk: "bg-warn/30 text-warn" },
+  bulunamadi: { icon: XCircle,       bg: "bg-bad/12",   ring: "border-bad/40 hover:border-bad/70",    text: "text-bad",  etiket: "404",  filtreRenk: "bg-bad/30 text-bad" },
+  cakisma:    { icon: GitMerge,      bg: "bg-warn/20",  ring: "border-warn/60 hover:border-warn/90",  text: "text-warn", etiket: "CONF", filtreRenk: "bg-warn/40 text-warn" },
 };
 
 function saatFormat(t: string) {
@@ -36,26 +39,33 @@ function relativeSure(saniye: number) {
   return `${sa}sa once`;
 }
 
-function Sparkline({ buckets }: { buckets: number[] }) {
-  const w = 120;
-  const h = 28;
-  const max = Math.max(1, ...buckets);
+function WaveBars({ buckets }: { buckets: number[] }) {
+  const w = 140;
+  const h = 32;
+  const max = Math.max(2, ...buckets);
   const bw = w / buckets.length;
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="overflow-visible">
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="overflow-visible shrink-0">
+      <defs>
+        <linearGradient id="wave-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#5FBE7A" />
+          <stop offset="100%" stopColor="#BF6F34" />
+        </linearGradient>
+      </defs>
       {buckets.map((v, i) => {
-        const bh = (v / max) * h;
+        const oran = Math.min(1, v / max);
+        const bh = Math.max(2, oran * h);
         return (
           <motion.rect
             key={i}
-            x={i * bw + 0.5}
-            width={Math.max(bw - 1, 1)}
+            x={i * bw + 0.6}
+            width={Math.max(bw - 1.2, 1.5)}
             initial={false}
             animate={{ y: h - bh, height: bh }}
-            transition={{ type: "spring", stiffness: 220, damping: 22 }}
-            fill={v > 0 ? "#5FBE7A" : "#C6BDAC"}
-            opacity={v > 0 ? 0.85 : 0.3}
-            rx={1}
+            transition={{ type: "spring", stiffness: 240, damping: 18 }}
+            fill={v > 0 ? "url(#wave-grad)" : "#C6BDAC"}
+            opacity={v > 0 ? 0.95 : 0.25}
+            rx={1.2}
           />
         );
       })}
@@ -68,8 +78,12 @@ type Props = {
   onSec?: (row: LogSatir) => void;
 };
 
+type FiltreTip = "tum" | "basarili" | "mukerrer" | "bulunamadi" | "cakisma";
+
 export default function CanliAkis({ rows, onSec }: Props) {
   const [now, setNow] = useState(() => Date.now());
+  const [filtre, setFiltre] = useState<FiltreTip>("tum");
+
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
@@ -89,14 +103,13 @@ export default function CanliAkis({ rows, onSec }: Props) {
   }, [rows]);
 
   const buckets = useMemo(() => {
-    const N = 30;
+    const N = 24;
     const pencereSn = 60;
     const kovaSn = pencereSn / N;
     const arr = new Array<number>(N).fill(0);
-    const simdi = now;
     for (const r of rows) {
       const t = new Date(r.zaman).getTime();
-      const yas = (simdi - t) / 1000;
+      const yas = (now - t) / 1000;
       if (yas < 0 || yas > pencereSn) continue;
       const idx = N - 1 - Math.floor(yas / kovaSn);
       if (idx >= 0 && idx < N) arr[idx] += 1;
@@ -104,113 +117,164 @@ export default function CanliAkis({ rows, onSec }: Props) {
     return arr;
   }, [rows, now]);
 
+  const kullaniciOzeti = useMemo(() => {
+    const map = new Map<string, { ad: string; sayi: number; son: number; renk: string }>();
+    for (const r of rows) {
+      const ad = r.kullanici_ad ?? "?";
+      const t = new Date(r.zaman).getTime();
+      const m = map.get(ad);
+      if (m) { m.sayi++; if (t > m.son) m.son = t; }
+      else map.set(ad, { ad, sayi: 1, son: t, renk: kullaniciRengi(ad) });
+    }
+    return Array.from(map.values()).sort((a, b) => b.sayi - a.sayi).slice(0, 4);
+  }, [rows]);
+
+  const durumSayim = useMemo(() => {
+    const o = { basarili: 0, mukerrer: 0, bulunamadi: 0, cakisma: 0 } as Record<string, number>;
+    rows.forEach(r => { if (o[r.durum] != null) o[r.durum]++; });
+    return o;
+  }, [rows]);
+
+  const goster = useMemo(() => {
+    const filt = filtre === "tum" ? rows : rows.filter(r => r.durum === filtre);
+    return filt.slice(0, 40);
+  }, [rows, filtre]);
+
   const aktif = sonGecenSn < 5 && rows.length > 0;
-  const goster = rows.slice(0, 30);
 
   return (
-    <div className="card overflow-hidden relative">
-      <div className="flex items-center gap-4 px-4 py-2.5 border-b border-edge/50 bg-gradient-to-r from-cream/80 to-card flex-wrap">
-        <div className="flex items-center gap-2">
-          <div className="relative inline-flex h-2.5 w-2.5">
-            <span className={cn("absolute inset-0 rounded-full", aktif ? "bg-good" : "bg-edge")} />
-            {aktif && (
-              <span className="absolute inset-0 rounded-full bg-good/60 animate-ping" />
-            )}
+    <div className="card overflow-hidden relative min-w-0">
+      <div className="px-3 sm:px-4 py-2.5 border-b border-edge/50 bg-gradient-to-r from-cream/80 to-card">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="relative inline-flex h-2.5 w-2.5">
+              <span className={cn("absolute inset-0 rounded-full", aktif ? "bg-good" : "bg-edge")} />
+              {aktif && <span className="absolute inset-0 rounded-full bg-good/60 animate-ping" />}
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-ink/80">
+              {aktif ? "Canli" : "Beklemede"}
+            </span>
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-ink/80">
-            {aktif ? "Canli" : "Beklemede"}
-          </span>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Activity size={14} className="text-deep" />
+            <div className="font-display text-2xl leading-none text-deep">
+              <NumberTicker value={taramaDk} />
+            </div>
+            <span className="text-[10px] uppercase tracking-[0.16em] text-ink/55 self-end pb-0.5">tarama/dk</span>
+          </div>
+
+          <WaveBars buckets={buckets} />
+
+          <div className="ml-auto flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-1.5 text-[11px] text-ink/65">
+              <Clock size={12} />
+              {son ? (
+                <span className="font-mono">
+                  <b className="text-ink">{saatFormat(son.zaman)}</b>{" "}
+                  <span className="text-ink/50">({relativeSure(sonGecenSn)})</span>
+                </span>
+              ) : <span>henuz yok</span>}
+            </div>
+            <div className="hidden md:flex items-center gap-1 text-[10px] uppercase tracking-[0.18em] text-ink/55">
+              <Radio size={11} /> ws
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <Activity size={12} className="text-deep" />
-          <div className="font-display text-2xl leading-none text-deep">
-            <NumberTicker value={taramaDk} />
+        <div className="mt-2.5 flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1 text-[11px]">
+            <FilterIcon size={12} className="text-ink/45" />
+            {(["tum", "basarili", "mukerrer", "bulunamadi", "cakisma"] as FiltreTip[]).map(t => {
+              const c = t === "tum" ? null : DURUM_CFG[t];
+              const sayi = t === "tum" ? rows.length : durumSayim[t];
+              return (
+                <button key={t} onClick={() => setFiltre(t)}
+                  className={cn(
+                    "px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition",
+                    filtre === t
+                      ? c ? c.filtreRenk : "bg-deep text-white"
+                      : "bg-edge/25 text-ink/70 hover:bg-edge/45"
+                  )}>
+                  {t === "tum" ? "TUM" : c?.etiket} <span className="opacity-70 font-mono">{sayi}</span>
+                </button>
+              );
+            })}
           </div>
-          <span className="text-[10px] uppercase tracking-[0.18em] text-ink/55 self-end pb-0.5">tarama/dk</span>
-        </div>
 
-        <div className="hidden sm:block">
-          <Sparkline buckets={buckets} />
-        </div>
-
-        <div className="ml-auto flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-[11px] text-ink/65">
-            <Clock size={12} />
-            {son ? (
-              <span className="font-mono">
-                son: <b className="text-ink">{saatFormat(son.zaman)}</b>{" "}
-                <span className="text-ink/50">({relativeSure(sonGecenSn)})</span>
-              </span>
-            ) : <span>henuz yok</span>}
-          </div>
-          <div className="hidden md:flex items-center gap-1 text-[10px] uppercase tracking-[0.18em] text-ink/55">
-            <Radio size={11} />
-            ws aktif
-          </div>
+          {kullaniciOzeti.length > 0 && (
+            <div className="ml-auto flex items-center gap-1">
+              <Users size={12} className="text-ink/45" />
+              {kullaniciOzeti.map(u => (
+                <div key={u.ad}
+                  title={`${u.ad}: ${u.sayi} tarama, son ${relativeSure(Math.floor((now - u.son)/1000))}`}
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-card border border-edge/60">
+                  <span className="inline-flex items-center justify-center h-4 w-4 rounded-full text-[8px] font-bold text-white"
+                    style={{ backgroundColor: u.renk }}>
+                    {u.ad.slice(0, 1).toUpperCase()}
+                  </span>
+                  <span className="font-mono text-[10px] tabular-nums font-bold">{u.sayi}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       <div className="relative">
         {goster.length === 0 ? (
           <div className="px-4 py-4 text-sm text-ink/55 font-mono">
-            <span className="opacity-60">$</span> first scan bekleniyor
+            <span className="opacity-60">$</span> {filtre === "tum" ? "first scan bekleniyor" : `${filtre} icin kayit yok`}
             <span className="inline-block w-2 h-3.5 ml-1 align-middle bg-ink/30 animate-caret" />
           </div>
         ) : (
           <>
-            <Marquee duration="55s" pauseOnHover repeat={3} className="py-2.5 px-3">
+            <Marquee duration="60s" pauseOnHover repeat={3} className="py-3 px-3">
               {goster.map((r, i) => {
                 const cfg = DURUM_CFG[r.durum];
                 if (!cfg) return null;
                 const Ikon = cfg.icon;
                 const kAd = r.kullanici_ad ?? "?";
                 const kRenk = kullaniciRengi(kAd);
+                const isLatest = i === 0;
                 return (
                   <button
                     key={r.id}
                     onClick={() => onSec?.(r)}
                     className={cn(
-                      "group inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border whitespace-nowrap shrink-0",
-                      "transition-all hover:scale-[1.03]",
+                      "group inline-flex items-center gap-2 px-3 py-2 rounded-xl border whitespace-nowrap shrink-0",
+                      "transition-all hover:scale-[1.04] hover:shadow-md",
                       cfg.bg, cfg.ring,
-                      i === 0 && "relative",
+                      isLatest && "relative ring-2 ring-accent/40",
                     )}
                   >
-                    <span className="text-[10px] font-mono text-ink/55 tabular-nums">
+                    <span className="flex items-center gap-1 shrink-0">
+                      <Ikon size={14} className={cfg.text} />
+                      <span className={cn("text-[10px] font-bold tracking-wider", cfg.text)}>{cfg.etiket}</span>
+                    </span>
+                    <span className="text-[10px] font-mono text-ink/55 tabular-nums shrink-0">
                       {saatFormat(r.zaman)}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Ikon size={12} className={cn(
-                        r.durum === "basarili" && "text-good",
-                        r.durum === "mukerrer" && "text-warn",
-                        r.durum === "bulunamadi" && "text-bad",
-                        r.durum === "cakisma" && "text-warn",
-                      )} />
-                      <span className="text-[10px] font-bold tracking-wider opacity-80">{cfg.etiket}</span>
-                    </span>
-                    <span className="font-mono text-sm text-ink font-semibold max-w-[140px] truncate">
+                    <span className="font-mono text-sm text-ink font-bold max-w-[160px] truncate">
                       {r.seri_giris}
                     </span>
                     {r.stok_kodu && (
-                      <span className="text-[10px] font-mono text-ink/55 px-1 py-0.5 rounded bg-edge/30">
+                      <span className="text-[10px] font-mono text-ink/65 px-1.5 py-0.5 rounded bg-card border border-edge/50">
                         {r.stok_kodu}
                       </span>
                     )}
                     {r.urun_adi && (
-                      <span className="text-[11px] text-ink/65 max-w-[120px] truncate">
+                      <span className="text-[11px] text-ink/70 max-w-[140px] truncate">
                         {r.urun_adi}
                       </span>
                     )}
-                    <span
-                      title={kAd}
-                      className="inline-flex items-center justify-center h-5 w-5 rounded-full text-[9px] font-bold text-white"
-                      style={{ backgroundColor: kRenk }}
-                    >
+                    <span title={kAd}
+                      className="inline-flex items-center justify-center h-6 w-6 rounded-full text-[10px] font-bold text-white shrink-0"
+                      style={{ backgroundColor: kRenk }}>
                       {kAd.slice(0, 1).toUpperCase()}
                     </span>
-                    {i === 0 && aktif && (
-                      <BorderBeam size={50} duration={2.5} colorFrom="#BF6F34" colorTo="#FFE2CC" borderWidth={1} />
+                    {isLatest && aktif && (
+                      <BorderBeam size={60} duration={2.5} colorFrom="#BF6F34" colorTo="#FFE2CC" borderWidth={1.5} />
                     )}
                   </button>
                 );
@@ -231,7 +295,7 @@ export default function CanliAkis({ rows, onSec }: Props) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
             className="absolute bottom-0 left-0 h-0.5 origin-left bg-gradient-to-r from-accent via-good to-transparent"
-            style={{ width: "60%" }}
+            style={{ width: "70%" }}
           />
         </AnimatePresence>
       )}

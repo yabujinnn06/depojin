@@ -220,7 +220,7 @@ export default function Sayim() {
             <BlurFade delay={0.2}><StatCard etiket="Kalan" deger={ozet.kalan_seri} toplam={ozet.toplam_seri} tone="warn" icon={<MinusCircle size={16} />} /></BlurFade>
           </div>
           <BlurFade delay={0.22}>
-            <div className="card p-4 flex items-center gap-4 flex-wrap">
+            <div className="card p-3 sm:p-4 flex items-center gap-3 sm:gap-4 flex-wrap min-w-0">
               <div className="flex items-center gap-2">
                 <Scale size={18} className="text-deep" />
                 <span className="text-[10px] uppercase tracking-[0.2em] text-ink/60">Portal karsilastirma</span>
@@ -248,9 +248,8 @@ export default function Sayim() {
                   </div>
                 </div>
               </div>
-              <div className="ml-auto text-xs text-ink/55 max-w-xs">
+              <div className="basis-full lg:basis-auto lg:ml-auto text-xs text-ink/55 lg:max-w-xs">
                 Portalda olmasi gereken = {ozet.portal_toplam}. Eksik say ise fark eksi cikar.
-                Stok bazli detay listede.
               </div>
             </div>
           </BlurFade>

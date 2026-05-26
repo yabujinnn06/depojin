@@ -13,8 +13,8 @@ export default function Layout() {
       <header className="sticky top-0 z-30 backdrop-blur bg-deep/95 text-white border-b border-deep/20">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
           <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
-            <DepoJinLogo size={32} />
-            <span>Depojin</span>
+            <DepoJinLogo size={40} />
+            <span className="hidden sm:inline">Depojin</span>
           </Link>
           <nav className="flex-1 flex gap-1 text-sm ml-3">
             <NavItem to="/" icon={<Boxes size={14} />} label="Oturumlar" />
@@ -37,11 +37,11 @@ export default function Layout() {
           </div>
         </div>
       </header>
-      <main className="flex-1">
+      <main className="flex-1 min-w-0 overflow-x-hidden">
         <motion.div
           initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
-          className="max-w-6xl mx-auto px-4 py-6"
+          className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 min-w-0"
         >
           <Outlet />
         </motion.div>

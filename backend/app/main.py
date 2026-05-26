@@ -111,5 +111,8 @@ if settings.static_dir and os.path.isdir(settings.static_dir):
 
     @app.get("/{full_path:path}")
     def spa(full_path: str):
-        index = os.path.join(static_path, "index.html")
-        return FileResponse(index)
+        if full_path:
+            candidate = os.path.normpath(os.path.join(static_path, full_path))
+            if candidate.startswith(static_path) and os.path.isfile(candidate):
+                return FileResponse(candidate)
+        return FileResponse(os.path.join(static_path, "index.html"))
