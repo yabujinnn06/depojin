@@ -1,4 +1,5 @@
 import asyncio
+import json
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, status
 from sqlalchemy import select, func, and_
@@ -143,7 +144,34 @@ async def ws_oturum(ws: WebSocket, oturum_id: int, token: str | None = Query(Non
     await manager.connect(oturum_id, ws, user_id, ad, rol)
     try:
         while True:
-            await ws.receive_text()
+            raw = await ws.receive_text()
+            try:
+                msg = json.loads(raw)
+            except Exception:
+                continue
+            tip = msg.get("tip")
+            if tip == "chat":
+                metin = str(msg.get("mesaj", ""))[:500].strip()
+                if not metin:
+                    continue
+                await manager.broadcast(oturum_id, {
+                    "tip": "chat",
+                    "kullanici_id": user_id, "ad": ad, "rol": rol,
+                    "zaman": datetime.utcnow().isoformat(),
+                    "mesaj": metin,
+                })
+            elif tip == "voice":
+                data = msg.get("data") or ""
+                if not isinstance(data, str) or len(data) > 400_000:
+                    continue
+                await manager.broadcast(oturum_id, {
+                    "tip": "voice",
+                    "kullanici_id": user_id, "ad": ad, "rol": rol,
+                    "zaman": datetime.utcnow().isoformat(),
+                    "data": data,
+                    "mime": str(msg.get("mime", "audio/webm"))[:40],
+                    "sure": float(msg.get("sure", 0) or 0),
+                })
     except WebSocketDisconnect:
         pass
     finally:

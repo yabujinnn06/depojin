@@ -11,9 +11,21 @@ export type PresenceUser = {
   baglanti_sayisi: number;
 };
 
+export type ChatMesaji = {
+  tip: "chat"; kullanici_id: number; ad: string; rol: string;
+  zaman: string; mesaj: string;
+};
+
+export type SesMesaji = {
+  tip: "voice"; kullanici_id: number; ad: string; rol: string;
+  zaman: string; data: string; mime: string; sure: number;
+};
+
 export type WSMesaj =
   | { tip: "tarama"; kullanici: string; kullanici_id: number; zaman: string; sonuc: any }
-  | { tip: "presence"; kullanicilar: PresenceUser[] };
+  | { tip: "presence"; kullanicilar: PresenceUser[] }
+  | ChatMesaji
+  | SesMesaji;
 
 type Handler = (m: WSMesaj) => void;
 type DurumDinleyici = (a: boolean) => void;
@@ -30,6 +42,12 @@ export class SayimWS {
   }
 
   durum(fn: DurumDinleyici) { this.onAcildiKapandi = fn; }
+
+  send(payload: any): boolean {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return false;
+    try { this.ws.send(JSON.stringify(payload)); return true; }
+    catch { return false; }
+  }
 
   private bag() {
     if (this.kapatildi) return;

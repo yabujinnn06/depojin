@@ -3,7 +3,7 @@ import { ArrowLeft, Camera, Download, PowerOff, Boxes, ListChecks, MinusCircle, 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, LogSatir, Oturum, Ozet, StokOzet, Tarama } from "../lib/api";
-import { connectSayimWS, SayimWS, PresenceUser } from "../lib/ws";
+import { connectSayimWS, SayimWS, PresenceUser, ChatMesaji, SesMesaji } from "../lib/ws";
 import { sound } from "../lib/sound";
 import { useAuth } from "../lib/auth";
 import { useToast } from "../lib/toast";
@@ -22,6 +22,7 @@ import SeriDetayModal from "../components/SeriDetayModal";
 import TopluIslemler from "../components/TopluIslemler";
 import PortalKarsilastirma from "../components/PortalKarsilastirma";
 import PresencePanel from "../components/PresencePanel";
+import TelsizPanel from "../components/TelsizPanel";
 import { User as UserT } from "../lib/api";
 
 export default function Sayim() {
@@ -43,6 +44,8 @@ export default function Sayim() {
   const [detayLog, setDetayLog] = useState<LogSatir | null>(null);
   const [users, setUsers] = useState<UserT[]>([]);
   const [presence, setPresence] = useState<PresenceUser[]>([]);
+  const [sonChat, setSonChat] = useState<ChatMesaji | SesMesaji | null>(null);
+  const [wsRef, setWsRef] = useState<SayimWS | null>(null);
   const yenileRef = useRef<number | undefined>();
 
   const yenile = useCallback(async () => {
@@ -72,11 +75,16 @@ export default function Sayim() {
         setPresence(m.kullanicilar);
         return;
       }
+      if (m.tip === "chat" || m.tip === "voice") {
+        setSonChat(m);
+        return;
+      }
       window.clearTimeout(yenileRef.current);
       yenileRef.current = window.setTimeout(yenile, 150);
     });
     ws.durum(setWsAcik);
-    return () => ws.close();
+    setWsRef(ws);
+    return () => { ws.close(); setWsRef(null); };
   }, [oturumId, yenile]);
 
   useEffect(() => {
@@ -291,6 +299,9 @@ export default function Sayim() {
         <div className="lg:col-span-2 space-y-4 lg:sticky lg:top-4 self-start min-w-0">
           <BlurFade delay={0.48} direction="left">
             <PresencePanel rows={presence} benimId={user?.id ?? null} />
+          </BlurFade>
+          <BlurFade delay={0.49} direction="left">
+            <TelsizPanel ws={wsRef} son={sonChat} />
           </BlurFade>
           <BlurFade delay={0.5} direction="left">
             <Terminal

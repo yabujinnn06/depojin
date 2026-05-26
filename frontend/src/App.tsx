@@ -8,7 +8,14 @@ import Rapor from "./pages/Rapor";
 import Layout from "./components/Layout";
 
 function Guard({ children, admin }: { children: JSX.Element; admin?: boolean }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-cream">
+        <div className="text-ink/55 text-sm">Yukleniyor…</div>
+      </div>
+    );
+  }
   if (!user) return <Navigate to="/login" replace />;
   if (admin && user.rol !== "admin") return <Navigate to="/" replace />;
   return children;
