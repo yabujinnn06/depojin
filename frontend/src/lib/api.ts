@@ -8,6 +8,7 @@ export type Oturum = {
 export type StokOzet = {
   id: number; stok_kodu: string; urun_adi: string;
   toplam: number; sayilan: number; portal_sayim: number;
+  sonradan_eklendi?: boolean;
 };
 export type Tarama = {
   durum: "basarili" | "mukerrer" | "bulunamadi" | "cakisma" | "bos";

@@ -1,4 +1,5 @@
-import { Droplets, KeyRound, User } from "lucide-react";
+import { KeyRound, User } from "lucide-react";
+import DepoJinLogo from "../components/DepoJinLogo";
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
@@ -46,8 +47,8 @@ export default function Login() {
           >
             <div className="text-center">
               <BlurFade delay={0.2} duration={0.5}>
-                <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-deep text-accent shadow-lg shadow-deep/30">
-                  <Droplets size={28} />
+                <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-deep shadow-lg shadow-deep/30 p-1">
+                  <DepoJinLogo size={56} />
                 </div>
               </BlurFade>
               <BlurFade delay={0.3} duration={0.4}>

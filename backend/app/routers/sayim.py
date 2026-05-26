@@ -127,6 +127,7 @@ def stoklar(oturum_id: int, db: Session = Depends(get_db), _: User = Depends(cur
             Stok.stok_kodu,
             Stok.urun_adi,
             Stok.portal_sayim,
+            Stok.sonradan_eklendi,
             func.coalesce(toplam_sub.c.toplam, 0),
             func.coalesce(sayilan_sub.c.sayilan, 0),
         )
@@ -136,7 +137,8 @@ def stoklar(oturum_id: int, db: Session = Depends(get_db), _: User = Depends(cur
         .order_by(Stok.stok_kodu)
     ).all()
     return [
-        StokOzet(id=r[0], stok_kodu=r[1], urun_adi=r[2], portal_sayim=r[3], toplam=r[4], sayilan=r[5])
+        StokOzet(id=r[0], stok_kodu=r[1], urun_adi=r[2], portal_sayim=r[3],
+                 sonradan_eklendi=bool(r[4]), toplam=r[5], sayilan=r[6])
         for r in rows
     ]
 

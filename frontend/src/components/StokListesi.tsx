@@ -77,7 +77,12 @@ export default function StokListesi({ rows, onSec }: { rows: StokOzet[]; onSec?:
                     tam && "bg-good/10",
                   )}
                 >
-                  <td className="px-3 py-2 font-mono text-xs">{s.stok_kodu}</td>
+                  <td className="px-3 py-2 font-mono text-xs">
+                    {s.stok_kodu}
+                    {s.sonradan_eklendi && (
+                      <span className="ml-1 text-[8px] uppercase tracking-wide text-accent font-bold">+ek</span>
+                    )}
+                  </td>
                   <td className="px-3 py-2 max-w-[260px]">
                     <div className="truncate">{s.urun_adi}</div>
                     {s.toplam > 0 && (

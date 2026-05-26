@@ -12,7 +12,7 @@ import BarkodInput from "../components/BarkodInput";
 import DurumKarti from "../components/DurumKarti";
 import StatCard from "../components/StatCard";
 import StokListesi from "../components/StokListesi";
-import TerminalFeed from "../components/TerminalFeed";
+import Terminal from "../components/Terminal";
 import KameraTarayici from "../components/KameraTarayici";
 import { BlurFade } from "../components/magic/BlurFade";
 import CanliAkis from "../components/CanliAkis";
@@ -315,7 +315,13 @@ export default function Sayim() {
         </div>
         <div className="lg:col-span-2 space-y-4 lg:sticky lg:top-4 self-start">
           <BlurFade delay={0.5} direction="left">
-            <TerminalFeed rows={log} baslik={`oturum_${oturumId}`} />
+            <Terminal
+              rows={log}
+              oturumId={oturumId}
+              baslik={`oturum_${oturumId}`}
+              stoklar={stoklar}
+              onSec={setDetayLog}
+            />
           </BlurFade>
         </div>
       </div>

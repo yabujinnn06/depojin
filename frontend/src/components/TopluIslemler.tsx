@@ -28,12 +28,18 @@ export default function TopluIslemler({ oturumId, users, aktif, onDegisti }: Pro
   function _girisSatirlari() {
     const out: { stok_kodu: string; urun_adi?: string; seri_no: string; portal_sayim?: number }[] = [];
     metin.split(/\r?\n/).forEach(line => {
-      const parts = line.split(/[\t;,]/).map(p => p.trim());
-      if (parts.length >= 3) {
-        out.push({
-          stok_kodu: parts[0], urun_adi: parts[1] || undefined,
-          seri_no: parts[2], portal_sayim: Number(parts[3]) || 0,
-        });
+      const s = line.trim();
+      if (!s) return;
+      const hasDelim = /[\t;,]/.test(s);
+      const parts = hasDelim
+        ? s.split(/[\t;,]/).map(p => p.trim()).filter(Boolean)
+        : s.split(/\s+/);
+      if (parts.length === 2) {
+        out.push({ stok_kodu: parts[0], seri_no: parts[1] });
+      } else if (parts.length === 3) {
+        out.push({ stok_kodu: parts[0], urun_adi: parts[1], seri_no: parts[2] });
+      } else if (parts.length >= 4) {
+        out.push({ stok_kodu: parts[0], urun_adi: parts[1], seri_no: parts[2], portal_sayim: Number(parts[3]) || 0 });
       }
     });
     return out;

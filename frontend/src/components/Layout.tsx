@@ -1,4 +1,5 @@
-import { LogOut, Settings, Boxes, Droplets } from "lucide-react";
+import { LogOut, Settings, Boxes } from "lucide-react";
+import DepoJinLogo from "./DepoJinLogo";
 import { motion } from "framer-motion";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
@@ -12,7 +13,7 @@ export default function Layout() {
       <header className="sticky top-0 z-30 backdrop-blur bg-deep/95 text-white border-b border-deep/20">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
           <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
-            <Droplets size={20} className="text-accent" />
+            <DepoJinLogo size={32} />
             <span>Depojin</span>
           </Link>
           <nav className="flex-1 flex gap-1 text-sm ml-3">

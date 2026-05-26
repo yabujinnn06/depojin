@@ -104,12 +104,18 @@ export default function Admin() {
   function _giris_satirlari() {
     const out: { stok_kodu: string; urun_adi?: string; seri_no: string; portal_sayim?: number }[] = [];
     topluMetin.split(/\r?\n/).forEach(line => {
-      const parts = line.split(/[\t;,]/).map(p => p.trim());
-      if (parts.length >= 3) {
-        out.push({
-          stok_kodu: parts[0], urun_adi: parts[1] || undefined,
-          seri_no: parts[2], portal_sayim: Number(parts[3]) || 0,
-        });
+      const s = line.trim();
+      if (!s) return;
+      const hasDelim = /[\t;,]/.test(s);
+      const parts = hasDelim
+        ? s.split(/[\t;,]/).map(p => p.trim()).filter(Boolean)
+        : s.split(/\s+/);
+      if (parts.length === 2) {
+        out.push({ stok_kodu: parts[0], seri_no: parts[1] });
+      } else if (parts.length === 3) {
+        out.push({ stok_kodu: parts[0], urun_adi: parts[1], seri_no: parts[2] });
+      } else if (parts.length >= 4) {
+        out.push({ stok_kodu: parts[0], urun_adi: parts[1], seri_no: parts[2], portal_sayim: Number(parts[3]) || 0 });
       }
     });
     return out;
@@ -251,7 +257,7 @@ export default function Admin() {
           <textarea value={topluMetin} onChange={e => setTopluMetin(e.target.value)}
             rows={6}
             className="w-full px-3 py-2 rounded-lg border border-edge bg-white font-mono text-sm"
-            placeholder={"GIRIS icin her satir: STOK,URUN,SERI[,PORTAL]\nCIKIS/ZIMMET/IADE icin her satir: SERI"} />
+            placeholder={"GIRIS: STOK SERI (orn: 10036 ST878787) veya STOK,URUN,SERI[,PORTAL]\nCIKIS/ZIMMET/IADE: her satir bir SERI"} />
           <div className="flex gap-2 flex-wrap">
             <button onClick={topluGirisCalistir}
               className="btn btn-primary text-sm flex items-center gap-1.5">

@@ -68,6 +68,7 @@ class StokOzet(BaseModel):
     toplam: int
     sayilan: int
     portal_sayim: int
+    sonradan_eklendi: bool = False
 
 
 class TaramaIn(BaseModel):

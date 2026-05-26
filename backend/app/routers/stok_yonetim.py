@@ -169,6 +169,7 @@ def toplu_giris(oturum_id: int, data: TopluGirisIn, request: Request,
         for seri in s.seriler:
             seri_idx.add((s.id, seri.seri_no_norm))
 
+    simdi = datetime.utcnow()
     yeni_stok = 0; yeni_seri = 0; mukerrer = 0; bos = 0
     for r in data.satirlar:
         kod = normalize_stok_kodu(r.stok_kodu)
@@ -187,8 +188,12 @@ def toplu_giris(oturum_id: int, data: TopluGirisIn, request: Request,
             if (stok.id, norm) in seri_idx:
                 mukerrer += 1; continue
             seri_idx.add((stok.id, norm))
-            db.add(Seri(oturum_id=oturum_id, stok_id=stok.id,
-                        seri_no=seri, seri_no_norm=norm, sonradan_eklendi=True))
+            db.add(Seri(
+                oturum_id=oturum_id, stok_id=stok.id,
+                seri_no=seri, seri_no_norm=norm,
+                sayildi=True, sayim_tarihi=simdi, sayan_id=user.id,
+                sonradan_eklendi=True,
+            ))
             yeni_seri += 1
     audit(db, "toplu_giris", kullanici=user, kaynak_tip="oturum", kaynak_id=oturum_id,
           detay={"yeni_stok": yeni_stok, "yeni_seri": yeni_seri,
