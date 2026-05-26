@@ -14,6 +14,7 @@ export type Tarama = {
   mesaj: string; seri: string;
   stok_kodu?: string | null; urun_adi?: string | null;
   toplam?: number | null; sayilan?: number | null; kalan?: number | null;
+  portal_sayim?: number | null; portal_fark?: number | null;
   cakisan_stoklar?: string[] | null;
 };
 export type LogSatir = {
@@ -23,7 +24,8 @@ export type LogSatir = {
 };
 export type Ozet = {
   toplam_seri: number; sayilan_seri: number; kalan_seri: number;
-  stok_sayisi: number; son_islem: string | null;
+  stok_sayisi: number; portal_toplam: number; portal_fark: number;
+  son_islem: string | null;
 };
 export type LogSayfa = { toplam: number; items: LogSatir[] };
 export type DurumSayim = { durum: string; sayi: number };

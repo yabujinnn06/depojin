@@ -80,6 +80,8 @@ def _islem(db: Session, oturum_id: int, user: User, seri_giris: str) -> TaramaOu
             toplam=toplam,
             sayilan=sayilan,
             kalan=toplam - sayilan,
+            portal_sayim=stok.portal_sayim,
+            portal_fark=sayilan - stok.portal_sayim,
         )
 
     seri.sayildi = True
@@ -97,6 +99,8 @@ def _islem(db: Session, oturum_id: int, user: User, seri_giris: str) -> TaramaOu
         toplam=toplam,
         sayilan=sayilan,
         kalan=toplam - sayilan,
+        portal_sayim=stok.portal_sayim,
+        portal_fark=sayilan - stok.portal_sayim,
     )
 
 

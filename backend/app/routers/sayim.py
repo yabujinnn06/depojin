@@ -92,6 +92,7 @@ def ozet(oturum_id: int, db: Session = Depends(get_db), _: User = Depends(curren
     toplam = db.scalar(select(func.count(Seri.id)).where(Seri.oturum_id == oturum_id)) or 0
     sayilan = db.scalar(select(func.count(Seri.id)).where(and_(Seri.oturum_id == oturum_id, Seri.sayildi == True))) or 0
     stok_sayisi = db.scalar(select(func.count(Stok.id)).where(Stok.oturum_id == oturum_id)) or 0
+    portal_toplam = db.scalar(select(func.coalesce(func.sum(Stok.portal_sayim), 0)).where(Stok.oturum_id == oturum_id)) or 0
     son_islem = db.scalar(
         select(func.max(TaramaLog.zaman)).where(TaramaLog.oturum_id == oturum_id)
     )
@@ -100,6 +101,8 @@ def ozet(oturum_id: int, db: Session = Depends(get_db), _: User = Depends(curren
         sayilan_seri=sayilan,
         kalan_seri=toplam - sayilan,
         stok_sayisi=stok_sayisi,
+        portal_toplam=int(portal_toplam),
+        portal_fark=sayilan - int(portal_toplam),
         son_islem=son_islem,
     )
 

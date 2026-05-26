@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Camera, Download, PowerOff, Boxes, ListChecks, MinusCircle, ScanBarcode, BarChart3, Archive, Trash2, Wifi, WifiOff } from "lucide-react";
+import { ArrowLeft, Camera, Download, PowerOff, Boxes, ListChecks, MinusCircle, ScanBarcode, BarChart3, Archive, Trash2, Wifi, WifiOff, Scale } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, LogSatir, Oturum, Ozet, StokOzet, Tarama } from "../lib/api";
@@ -197,12 +197,49 @@ export default function Sayim() {
       </motion.header>
 
       {ozet && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <BlurFade delay={0.05}><StatCard etiket="Stok" deger={ozet.stok_sayisi} tone="deep" icon={<Boxes size={16} />} /></BlurFade>
-          <BlurFade delay={0.1}><StatCard etiket="Toplam Seri" deger={ozet.toplam_seri} tone="deep" icon={<ScanBarcode size={16} />} /></BlurFade>
-          <BlurFade delay={0.15}><StatCard etiket="Sayilan" deger={ozet.sayilan_seri} toplam={ozet.toplam_seri} tone="good" icon={<ListChecks size={16} />} /></BlurFade>
-          <BlurFade delay={0.2}><StatCard etiket="Kalan" deger={ozet.kalan_seri} toplam={ozet.toplam_seri} tone="warn" icon={<MinusCircle size={16} />} /></BlurFade>
-        </div>
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <BlurFade delay={0.05}><StatCard etiket="Stok" deger={ozet.stok_sayisi} tone="deep" icon={<Boxes size={16} />} /></BlurFade>
+            <BlurFade delay={0.1}><StatCard etiket="Toplam Seri" deger={ozet.toplam_seri} tone="deep" icon={<ScanBarcode size={16} />} /></BlurFade>
+            <BlurFade delay={0.15}><StatCard etiket="Sayilan" deger={ozet.sayilan_seri} toplam={ozet.toplam_seri} tone="good" icon={<ListChecks size={16} />} /></BlurFade>
+            <BlurFade delay={0.2}><StatCard etiket="Kalan" deger={ozet.kalan_seri} toplam={ozet.toplam_seri} tone="warn" icon={<MinusCircle size={16} />} /></BlurFade>
+          </div>
+          <BlurFade delay={0.22}>
+            <div className="card p-4 flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Scale size={18} className="text-deep" />
+                <span className="text-[10px] uppercase tracking-[0.2em] text-ink/60">Portal karsilastirma</span>
+              </div>
+              <div className="flex items-center gap-6 flex-wrap">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.16em] text-ink/55">Portalda</div>
+                  <div className="font-display text-2xl text-deep leading-none">{ozet.portal_toplam.toLocaleString("tr-TR")}</div>
+                </div>
+                <div className="text-2xl text-ink/30">→</div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.16em] text-ink/55">Sayilan</div>
+                  <div className="font-display text-2xl text-good leading-none">{ozet.sayilan_seri.toLocaleString("tr-TR")}</div>
+                </div>
+                <div className="text-2xl text-ink/30">=</div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.16em] text-ink/55">Fark</div>
+                  <div className={
+                    "font-display text-2xl leading-none " +
+                    (ozet.portal_fark === 0 ? "text-good"
+                      : ozet.portal_fark > 0 ? "text-warn"
+                      : "text-bad")
+                  }>
+                    {ozet.portal_fark > 0 ? "+" : ""}{ozet.portal_fark.toLocaleString("tr-TR")}
+                  </div>
+                </div>
+              </div>
+              <div className="ml-auto text-xs text-ink/55 max-w-xs">
+                Portalda olmasi gereken = {ozet.portal_toplam}. Eksik say ise fark eksi cikar.
+                Stok bazli detay listede.
+              </div>
+            </div>
+          </BlurFade>
+        </>
       )}
 
       <BlurFade delay={0.25}>

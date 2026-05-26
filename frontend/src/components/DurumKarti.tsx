@@ -88,12 +88,17 @@ export default function DurumKarti({ son }: { son: Tarama | null }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.05 }}
-            className="mt-4 grid grid-cols-3 gap-2 text-sm"
+            className="mt-4 grid grid-cols-4 gap-2 text-sm"
           >
             <Mini k="Stok" v={son.stok_kodu} />
-            <Mini k="Toplam" v={son.toplam} />
             <Mini k="Sayilan" v={son.sayilan} accent />
-            <div className="col-span-3 text-sm">
+            <Mini k="Stokta" v={son.toplam} />
+            <Mini
+              k="Portal"
+              v={son.portal_sayim ?? "—"}
+              fark={typeof son.portal_fark === "number" ? son.portal_fark : null}
+            />
+            <div className="col-span-4 text-sm">
               <span className="text-ink/55">Urun:</span> <b className="text-ink">{son.urun_adi}</b>
             </div>
           </motion.div>
@@ -110,7 +115,8 @@ export default function DurumKarti({ son }: { son: Tarama | null }) {
   );
 }
 
-function Mini({ k, v, accent }: { k: string; v: any; accent?: boolean }) {
+function Mini({ k, v, accent, fark }: { k: string; v: any; accent?: boolean; fark?: number | null }) {
+  const farkRenk = fark == null ? "" : fark === 0 ? "text-good" : fark > 0 ? "text-warn" : "text-bad";
   return (
     <div className={cn(
       "rounded-lg px-2.5 py-1.5 bg-white/60 backdrop-blur border border-edge/60",
@@ -118,6 +124,11 @@ function Mini({ k, v, accent }: { k: string; v: any; accent?: boolean }) {
     )}>
       <div className="text-[9px] uppercase tracking-[0.15em] text-ink/55">{k}</div>
       <div className="font-mono text-base font-bold leading-tight">{v ?? "—"}</div>
+      {fark != null && (
+        <div className={cn("text-[10px] font-mono leading-tight", farkRenk)}>
+          {fark > 0 ? `+${fark}` : fark}
+        </div>
+      )}
     </div>
   );
 }

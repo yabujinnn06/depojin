@@ -84,6 +84,8 @@ class TaramaOut(BaseModel):
     toplam: int | None = None
     sayilan: int | None = None
     kalan: int | None = None
+    portal_sayim: int | None = None
+    portal_fark: int | None = None
     cakisan_stoklar: list[str] | None = None
 
 
@@ -104,6 +106,8 @@ class OzetOut(BaseModel):
     sayilan_seri: int
     kalan_seri: int
     stok_sayisi: int
+    portal_toplam: int
+    portal_fark: int
     son_islem: datetime | None
 
 
