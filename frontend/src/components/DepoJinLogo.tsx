@@ -67,7 +67,7 @@ export default function DepoJinLogo({ size = 40, className }: Props) {
           <ellipse cx="35" cy="23" rx="1.1" ry="1.4" fill="#0F2A44" />
         </motion.g>
         <path d="M28 27 Q32 29 36 27" stroke="#0F2A44" strokeWidth="1" fill="none" strokeLinecap="round" />
-      </g>
+      </motion.g>
 
       <motion.circle
         cx="48" cy="22" r="1" fill="#BF6F34"
