@@ -1,5 +1,4 @@
-import { KeyRound, User } from "lucide-react";
-import DepoJinLogo from "../components/DepoJinLogo";
+import { KeyRound, User, Warehouse } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
@@ -47,8 +46,8 @@ export default function Login() {
           >
             <div className="text-center">
               <BlurFade delay={0.2} duration={0.5}>
-                <div className="inline-flex items-center justify-center h-24 w-24 rounded-2xl bg-deep shadow-xl shadow-deep/40 p-1">
-                  <DepoJinLogo size={88} />
+                <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-deep text-accent shadow-lg shadow-deep/30">
+                  <Warehouse size={32} />
                 </div>
               </BlurFade>
               <BlurFade delay={0.3} duration={0.4}>
