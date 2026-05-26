@@ -59,8 +59,8 @@ export default function Sayim() {
 
   useEffect(() => {
     if (!ozet || !oturum) return;
-    document.title = `${ozet.sayilan_seri}/${ozet.toplam_seri} · ${oturum.ad} · Rainwater`;
-    return () => { document.title = "Rainwater Sayim"; };
+    document.title = `${ozet.sayilan_seri}/${ozet.toplam_seri} · ${oturum.ad} · Depojin`;
+    return () => { document.title = "Depojin"; };
   }, [ozet, oturum]);
 
   async function tara(seri: string) {

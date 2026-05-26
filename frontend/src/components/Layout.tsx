@@ -13,7 +13,7 @@ export default function Layout() {
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
           <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
             <Droplets size={20} className="text-accent" />
-            <span>Rainwater <span className="font-light opacity-80">Sayim</span></span>
+            <span>Depojin</span>
           </Link>
           <nav className="flex-1 flex gap-1 text-sm ml-3">
             <NavItem to="/" icon={<Boxes size={14} />} label="Oturumlar" />

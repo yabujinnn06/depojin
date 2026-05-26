@@ -57,7 +57,7 @@ export default function Login() {
                     colorTo="#BF6F34"
                     speed={1.2}
                   >
-                    Rainwater Sayim
+                    Depojin
                   </AnimatedGradientText>
                 </div>
               </BlurFade>
