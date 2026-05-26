@@ -19,6 +19,8 @@ import CanliAkis from "../components/CanliAkis";
 import BilinmeyenSeriPaneli from "../components/BilinmeyenSeriPaneli";
 import StokDetayModal from "../components/StokDetayModal";
 import SeriDetayModal from "../components/SeriDetayModal";
+import TopluIslemler from "../components/TopluIslemler";
+import { User as UserT } from "../lib/api";
 
 export default function Sayim() {
   const { id } = useParams();
@@ -37,6 +39,7 @@ export default function Sayim() {
   const [wsAcik, setWsAcik] = useState(false);
   const [detayStok, setDetayStok] = useState<StokOzet | null>(null);
   const [detayLog, setDetayLog] = useState<LogSatir | null>(null);
+  const [users, setUsers] = useState<UserT[]>([]);
   const yenileRef = useRef<number | undefined>();
 
   const yenile = useCallback(async () => {
@@ -52,6 +55,13 @@ export default function Sayim() {
   }, [oturumId]);
 
   useEffect(() => { yenile(); }, [yenile]);
+  useEffect(() => {
+    if (user?.rol === "admin") {
+      api.users().then(setUsers).catch(() => {});
+    } else if (user) {
+      setUsers([{ id: user.id, ad: user.ad, rol: user.rol, aktif: true }]);
+    }
+  }, [user]);
 
   useEffect(() => {
     const ws: SayimWS = connectSayimWS(oturumId, () => {
@@ -290,6 +300,14 @@ export default function Sayim() {
                 </div>
               )}
             </div>
+          </BlurFade>
+          <BlurFade delay={0.42}>
+            <TopluIslemler
+              oturumId={oturumId}
+              users={users}
+              aktif={!!aktif}
+              onDegisti={yenile}
+            />
           </BlurFade>
           <BlurFade delay={0.45}>
             <StokListesi rows={stoklar} onSec={setDetayStok} />
