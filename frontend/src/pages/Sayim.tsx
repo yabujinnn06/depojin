@@ -301,7 +301,7 @@ export default function Sayim() {
             <PresencePanel rows={presence} benimId={user?.id ?? null} />
           </BlurFade>
           <BlurFade delay={0.49} direction="left">
-            <TelsizPanel ws={wsRef} son={sonChat} />
+            <TelsizPanel ws={wsRef} son={sonChat} oturumId={oturumId} />
           </BlurFade>
           <BlurFade delay={0.5} direction="left">
             <Terminal
