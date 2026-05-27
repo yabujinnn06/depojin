@@ -4,30 +4,31 @@ import { ScanLine } from "lucide-react";
 import { cn } from "../lib/cn";
 import { ShimmerButton } from "./magic/ShimmerButton";
 
-type Props = { onSubmit: (deger: string) => void; aktif?: boolean; busy?: boolean };
+type Props = { onSubmit: (deger: string) => void; aktif?: boolean; busy?: boolean; pauseFocus?: boolean };
 
-export default function BarkodInput({ onSubmit, aktif = true, busy = false }: Props) {
+export default function BarkodInput({ onSubmit, aktif = true, busy = false, pauseFocus = false }: Props) {
   const [val, setVal] = useState("");
   const [focused, setFocused] = useState(true);
   const ref = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (aktif) ref.current?.focus();
-  }, [aktif]);
+    if (aktif && !pauseFocus) ref.current?.focus({ preventScroll: true });
+  }, [aktif, pauseFocus]);
 
   useEffect(() => {
-    if (!aktif) return;
+    if (!aktif || pauseFocus) return;
     const tut = () => {
       const act = document.activeElement;
       if (act && act !== ref.current && (
         act.tagName === "INPUT" || act.tagName === "TEXTAREA" || act.tagName === "SELECT" ||
+        act.tagName === "VIDEO" || act.tagName === "BUTTON" ||
         (act as HTMLElement).isContentEditable
       )) return;
-      if (act !== ref.current) ref.current?.focus();
+      if (act !== ref.current) ref.current?.focus({ preventScroll: true });
     };
-    const t = setInterval(tut, 1500);
+    const t = setInterval(tut, 2000);
     return () => clearInterval(t);
-  }, [aktif]);
+  }, [aktif, pauseFocus]);
 
   function handle(e: FormEvent) {
     e.preventDefault();

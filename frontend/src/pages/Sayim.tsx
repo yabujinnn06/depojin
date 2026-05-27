@@ -247,7 +247,7 @@ export default function Sayim() {
       <div className="grid lg:grid-cols-5 gap-4 min-w-0">
         <div className="lg:col-span-3 space-y-4 min-w-0">
           <BlurFade delay={0.3}>
-            <BarkodInput onSubmit={tara} aktif={aktif} busy={busy} />
+            <BarkodInput onSubmit={tara} aktif={aktif} busy={busy} pauseFocus={kameraAcik} />
           </BlurFade>
           {hata && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
