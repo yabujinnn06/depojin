@@ -4,6 +4,11 @@ from fastapi.responses import StreamingResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.drawing.image import Image as XLImage
+from openpyxl.drawing.spreadsheet_drawing import OneCellAnchor, AnchorMarker
+from openpyxl.drawing.xdr import XDRPositiveSize2D
+from openpyxl.utils.units import pixels_to_EMU
+from PIL import Image as PILImage, ImageDraw, ImageFont
 from sqlalchemy import select, func, and_
 from sqlalchemy.orm import Session
 
@@ -26,49 +31,73 @@ CREAM = "FFF4F0E8"
 EDGE = "FFC6BDAC"
 
 
-BRAND_USTU = '&L&"Inter,Bold"&8&KBF6F34YABUJIN&C&"Inter"&8&K999999depojin sayim sistemi&R&"Inter"&8&K999999&D &T'
-BRAND_ALTI = '&L&"Inter"&8&K999999yabujin · depojin&C&"Inter"&8&K999999www.depojin · {oturum}&R&"Inter"&8&K999999sayfa &P / &N'
-
-
 def _border(thin: bool = True) -> Border:
     s = Side(style="thin", color=EDGE) if thin else Side(style="medium", color=EDGE)
     return Border(left=s, right=s, top=s, bottom=s)
 
 
-def _brand_uygula(ws, oturum_ad: str) -> None:
-    ws.oddHeader.left.text = "YABUJIN"
-    ws.oddHeader.left.size = 9
-    ws.oddHeader.left.color = "BF6F34"
-    ws.oddHeader.center.text = "DEPOJIN · sayim sistemi"
-    ws.oddHeader.center.size = 9
-    ws.oddHeader.center.color = "999999"
-    ws.oddHeader.right.text = "&D"
-    ws.oddHeader.right.size = 9
-    ws.oddHeader.right.color = "999999"
-    ws.oddFooter.left.text = "yabujin · depojin"
-    ws.oddFooter.left.size = 8
-    ws.oddFooter.left.color = "AAAAAA"
-    ws.oddFooter.center.text = oturum_ad
-    ws.oddFooter.center.size = 8
-    ws.oddFooter.center.color = "AAAAAA"
-    ws.oddFooter.right.text = "Sayfa &P / &N"
-    ws.oddFooter.right.size = 8
-    ws.oddFooter.right.color = "AAAAAA"
-    ws.print_options.horizontalCentered = True
+_FONT_YOLLARI = [
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
+    "/Library/Fonts/Arial Bold.ttf",
+    "C:/Windows/Fonts/arialbd.ttf",
+]
 
 
-def _brand_kelime(ws, son_satir: int, son_kolon: int) -> None:
-    satir = son_satir + 2
-    c = ws.cell(row=satir, column=1, value="yabujin · depojin")
-    c.font = Font(italic=True, color="FFD9C8B0", size=9)
-    c.alignment = Alignment(horizontal="left")
-    ws.merge_cells(start_row=satir, start_column=1, end_row=satir, end_column=min(son_kolon, 4))
-    c2 = ws.cell(row=satir, column=max(5, son_kolon - 1),
-                 value="sayim sistemi · " + ws.title.lower())
-    c2.font = Font(italic=True, color="FFD9C8B0", size=9)
-    c2.alignment = Alignment(horizontal="right")
-    ws.merge_cells(start_row=satir, start_column=max(5, son_kolon - 1),
-                   end_row=satir, end_column=son_kolon)
+def _font(boyut: int):
+    for p in _FONT_YOLLARI:
+        try:
+            return ImageFont.truetype(p, boyut)
+        except Exception:
+            continue
+    return ImageFont.load_default()
+
+
+_FILIGRAN_CACHE: bytes | None = None
+
+
+def _filigran_png() -> bytes:
+    global _FILIGRAN_CACHE
+    if _FILIGRAN_CACHE is not None:
+        return _FILIGRAN_CACHE
+    W, H = 900, 280
+    img = PILImage.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    f1 = _font(140)
+    f2 = _font(34)
+    txt1 = "YABUJIN"
+    txt2 = "depojin sayim sistemi"
+    try:
+        b1 = d.textbbox((0, 0), txt1, font=f1)
+        b2 = d.textbbox((0, 0), txt2, font=f2)
+        w1, h1 = b1[2] - b1[0], b1[3] - b1[1]
+        w2, h2 = b2[2] - b2[0], b2[3] - b2[1]
+    except Exception:
+        w1 = h1 = w2 = h2 = 0
+    d.text(((W - w1) / 2, (H - h1) / 2 - 18), txt1, fill=(191, 111, 52, 28), font=f1)
+    d.text(((W - w2) / 2, (H - h1) / 2 + h1 - 8), txt2, fill=(15, 42, 68, 22), font=f2)
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    _FILIGRAN_CACHE = buf.getvalue()
+    return _FILIGRAN_CACHE
+
+
+def _filigran_ekle(ws, satir_aralik: int = 22) -> None:
+    son_sat = ws.max_row or 1
+    son_kol = ws.max_column or 8
+    if son_sat < 1:
+        return
+    konum_satirlari = list(range(8, son_sat + satir_aralik, satir_aralik))
+    if not konum_satirlari:
+        konum_satirlari = [8]
+    for sat in konum_satirlari:
+        png = BytesIO(_filigran_png())
+        xl = XLImage(png)
+        xl.width = 520
+        xl.height = 160
+        kol_anchor = max(0, (son_kol // 2) - 3)
+        xl.anchor = f"{get_column_letter(kol_anchor + 1)}{sat}"
+        ws.add_image(xl)
 
 
 def _baslik_yaz(ws, satir, kolonlar, baslik_renk=DEEP, yazi_renk="FFFFFFFF"):
@@ -99,7 +128,8 @@ def export_excel(oturum_id: int, db: Session = Depends(get_db), _: User = Depend
     _sayim_sayfasi(db, ws1, oturum)
     _log_sayfasi(db, wb, oturum)
     for s in wb.worksheets:
-        _brand_uygula(s, oturum.ad)
+        s.sheet_view.showGridLines = False
+        _filigran_ekle(s)
     wb.properties.creator = "Yabujin · Depojin"
     wb.properties.company = "Yabujin"
     wb.properties.title = f"Depojin Sayim — {oturum.ad}"
@@ -125,7 +155,7 @@ def _sayim_sayfasi(db: Session, ws, oturum: SayimOturumu) -> None:
     ]
 
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(kolonlar))
-    c0 = ws.cell(row=1, column=1, value=f"YABUJIN · DEPOJIN — {oturum.ad}")
+    c0 = ws.cell(row=1, column=1, value=f"SAYIM RAPORU — {oturum.ad}")
     c0.font = Font(bold=True, color="FFFFFFFF", size=14)
     c0.fill = PatternFill("solid", fgColor=DEEP)
     c0.alignment = Alignment(horizontal="center", vertical="center")
@@ -222,8 +252,6 @@ def _sayim_sayfasi(db: Session, ws, oturum: SayimOturumu) -> None:
                     cc.font = Font(bold=True, italic=True, color=ACCENT)
             satir += 1
 
-    _brand_kelime(ws, satir, len(kolonlar))
-
 
 def _ozet_sayfasi(db: Session, wb: Workbook, oturum: SayimOturumu) -> None:
     ws = wb.create_sheet("Ozet", 0)
@@ -235,7 +263,7 @@ def _ozet_sayfasi(db: Session, wb: Workbook, oturum: SayimOturumu) -> None:
     ]
 
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(kolonlar))
-    c0 = ws.cell(row=1, column=1, value=f"YABUJIN · DEPOJIN — OZET · {oturum.ad}")
+    c0 = ws.cell(row=1, column=1, value=f"OZET — {oturum.ad}")
     c0.font = Font(bold=True, color="FFFFFFFF", size=14)
     c0.fill = PatternFill("solid", fgColor=DEEP)
     c0.alignment = Alignment(horizontal="center", vertical="center")
@@ -319,8 +347,6 @@ def _ozet_sayfasi(db: Session, wb: Workbook, oturum: SayimOturumu) -> None:
         for col in range(1, len(kolonlar) + 1):
             ws.cell(row=sat, column=col).border = _border()
         sat += 1
-
-    _brand_kelime(ws, sat, len(kolonlar))
 
 
 def _log_sayfasi(db: Session, wb: Workbook, oturum: SayimOturumu) -> None:
