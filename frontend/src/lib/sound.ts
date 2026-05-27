@@ -4,11 +4,10 @@ function ac(): AudioContext | null {
   if (typeof window === "undefined") return null;
   const C = (window as any).AudioContext || (window as any).webkitAudioContext;
   if (!C) return null;
-  if (!ctx) ctx = new C();
-  if (ctx.state === "suspended") {
-    ctx.resume().catch(() => {});
-  }
-  return ctx;
+  if (!ctx) ctx = new C() as AudioContext;
+  const c = ctx!;
+  if (c.state === "suspended") c.resume().catch(() => {});
+  return c;
 }
 
 function ton(freq: number, sure: number, baslangic = 0, tip: OscillatorType = "sine", vol = 0.18, freq2?: number) {
