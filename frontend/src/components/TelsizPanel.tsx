@@ -36,7 +36,7 @@ export default function TelsizPanel({ ws, son }: Props) {
   const [kayit, setKayit] = useState(false);
   const [kayitSn, setKayitSn] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
-  const dipRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const recRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const sayacRef = useRef<number | undefined>();
@@ -45,10 +45,16 @@ export default function TelsizPanel({ ws, son }: Props) {
   useEffect(() => {
     if (!son) return;
     setItems(prev => [...prev, { ...son, yerel_id: `${son.kullanici_id}_${son.zaman}_${Math.random()}` }].slice(-50));
+    if (son.kullanici_id !== user?.id) {
+      const tip = son.tip === "voice" ? "ses" : "mesaj";
+      const onIzleme = son.tip === "chat" ? `: ${son.mesaj.slice(0, 60)}` : "";
+      toast.push("info", `${son.ad} yeni ${tip}${onIzleme}`, 3500);
+    }
   }, [son]);
 
   useEffect(() => {
-    dipRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [items.length]);
 
   useEffect(() => {
@@ -139,7 +145,7 @@ export default function TelsizPanel({ ws, son }: Props) {
         </label>
       </div>
 
-      <div className="flex-1 max-h-[320px] overflow-y-auto p-3 space-y-2 bg-cream/30 min-h-[160px]">
+      <div ref={listRef} className="flex-1 max-h-[320px] overflow-y-auto p-3 space-y-2 bg-cream/30 min-h-[160px] overscroll-contain">
         {items.length === 0 && (
           <div className="text-center text-ink/45 text-xs py-4">
             <MessageSquare size={20} className="inline mb-1 opacity-40" />
@@ -185,7 +191,6 @@ export default function TelsizPanel({ ws, son }: Props) {
             );
           })}
         </AnimatePresence>
-        <div ref={dipRef} />
       </div>
 
       <form onSubmit={gonderChat} className="flex items-center gap-2 border-t border-edge/40 bg-card px-2.5 py-2">
