@@ -2,6 +2,7 @@ import { KeyRound, User, Warehouse } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
+import Filigran from "../components/Filigran";
 
 export default function Login() {
   const { login } = useAuth();
@@ -63,6 +64,7 @@ export default function Login() {
           {busy ? "Giris yapiliyor..." : "Giris"}
         </button>
       </form>
+      <Filigran />
     </div>
   );
 }

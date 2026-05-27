@@ -26,9 +26,49 @@ CREAM = "FFF4F0E8"
 EDGE = "FFC6BDAC"
 
 
+BRAND_USTU = '&L&"Inter,Bold"&8&KBF6F34YABUJIN&C&"Inter"&8&K999999depojin sayim sistemi&R&"Inter"&8&K999999&D &T'
+BRAND_ALTI = '&L&"Inter"&8&K999999yabujin · depojin&C&"Inter"&8&K999999www.depojin · {oturum}&R&"Inter"&8&K999999sayfa &P / &N'
+
+
 def _border(thin: bool = True) -> Border:
     s = Side(style="thin", color=EDGE) if thin else Side(style="medium", color=EDGE)
     return Border(left=s, right=s, top=s, bottom=s)
+
+
+def _brand_uygula(ws, oturum_ad: str) -> None:
+    ws.oddHeader.left.text = "YABUJIN"
+    ws.oddHeader.left.size = 9
+    ws.oddHeader.left.color = "BF6F34"
+    ws.oddHeader.center.text = "DEPOJIN · sayim sistemi"
+    ws.oddHeader.center.size = 9
+    ws.oddHeader.center.color = "999999"
+    ws.oddHeader.right.text = "&D"
+    ws.oddHeader.right.size = 9
+    ws.oddHeader.right.color = "999999"
+    ws.oddFooter.left.text = "yabujin · depojin"
+    ws.oddFooter.left.size = 8
+    ws.oddFooter.left.color = "AAAAAA"
+    ws.oddFooter.center.text = oturum_ad
+    ws.oddFooter.center.size = 8
+    ws.oddFooter.center.color = "AAAAAA"
+    ws.oddFooter.right.text = "Sayfa &P / &N"
+    ws.oddFooter.right.size = 8
+    ws.oddFooter.right.color = "AAAAAA"
+    ws.print_options.horizontalCentered = True
+
+
+def _brand_kelime(ws, son_satir: int, son_kolon: int) -> None:
+    satir = son_satir + 2
+    c = ws.cell(row=satir, column=1, value="yabujin · depojin")
+    c.font = Font(italic=True, color="FFD9C8B0", size=9)
+    c.alignment = Alignment(horizontal="left")
+    ws.merge_cells(start_row=satir, start_column=1, end_row=satir, end_column=min(son_kolon, 4))
+    c2 = ws.cell(row=satir, column=max(5, son_kolon - 1),
+                 value="sayim sistemi · " + ws.title.lower())
+    c2.font = Font(italic=True, color="FFD9C8B0", size=9)
+    c2.alignment = Alignment(horizontal="right")
+    ws.merge_cells(start_row=satir, start_column=max(5, son_kolon - 1),
+                   end_row=satir, end_column=son_kolon)
 
 
 def _baslik_yaz(ws, satir, kolonlar, baslik_renk=DEEP, yazi_renk="FFFFFFFF"):
@@ -58,6 +98,12 @@ def export_excel(oturum_id: int, db: Session = Depends(get_db), _: User = Depend
     _ozet_sayfasi(db, wb, oturum)
     _sayim_sayfasi(db, ws1, oturum)
     _log_sayfasi(db, wb, oturum)
+    for s in wb.worksheets:
+        _brand_uygula(s, oturum.ad)
+    wb.properties.creator = "Yabujin · Depojin"
+    wb.properties.company = "Yabujin"
+    wb.properties.title = f"Depojin Sayim — {oturum.ad}"
+    wb.properties.subject = "Sayim raporu"
 
     buf = BytesIO()
     wb.save(buf); buf.seek(0)
@@ -79,7 +125,7 @@ def _sayim_sayfasi(db: Session, ws, oturum: SayimOturumu) -> None:
     ]
 
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(kolonlar))
-    c0 = ws.cell(row=1, column=1, value=f"DEPOJIN SAYIM RAPORU — {oturum.ad}")
+    c0 = ws.cell(row=1, column=1, value=f"YABUJIN · DEPOJIN — {oturum.ad}")
     c0.font = Font(bold=True, color="FFFFFFFF", size=14)
     c0.fill = PatternFill("solid", fgColor=DEEP)
     c0.alignment = Alignment(horizontal="center", vertical="center")
@@ -176,6 +222,8 @@ def _sayim_sayfasi(db: Session, ws, oturum: SayimOturumu) -> None:
                     cc.font = Font(bold=True, italic=True, color=ACCENT)
             satir += 1
 
+    _brand_kelime(ws, satir, len(kolonlar))
+
 
 def _ozet_sayfasi(db: Session, wb: Workbook, oturum: SayimOturumu) -> None:
     ws = wb.create_sheet("Ozet", 0)
@@ -187,7 +235,7 @@ def _ozet_sayfasi(db: Session, wb: Workbook, oturum: SayimOturumu) -> None:
     ]
 
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(kolonlar))
-    c0 = ws.cell(row=1, column=1, value=f"OZET — {oturum.ad}")
+    c0 = ws.cell(row=1, column=1, value=f"YABUJIN · DEPOJIN — OZET · {oturum.ad}")
     c0.font = Font(bold=True, color="FFFFFFFF", size=14)
     c0.fill = PatternFill("solid", fgColor=DEEP)
     c0.alignment = Alignment(horizontal="center", vertical="center")
@@ -271,6 +319,8 @@ def _ozet_sayfasi(db: Session, wb: Workbook, oturum: SayimOturumu) -> None:
         for col in range(1, len(kolonlar) + 1):
             ws.cell(row=sat, column=col).border = _border()
         sat += 1
+
+    _brand_kelime(ws, sat, len(kolonlar))
 
 
 def _log_sayfasi(db: Session, wb: Workbook, oturum: SayimOturumu) -> None:

@@ -1,4 +1,5 @@
 import { LogOut, Settings, Boxes, Warehouse } from "lucide-react";
+import Filigran from "./Filigran";
 import { motion } from "framer-motion";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
@@ -45,6 +46,7 @@ export default function Layout() {
           <Outlet />
         </motion.div>
       </main>
+      <Filigran />
     </div>
   );
 }
