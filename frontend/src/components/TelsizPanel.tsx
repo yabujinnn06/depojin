@@ -4,6 +4,7 @@ import { Send, Mic, Radio, MessageSquare, Signal, BatteryFull, Volume2 } from "l
 import { ChatMesaji, SayimWS, SesMesaji } from "../lib/ws";
 import { useAuth } from "../lib/auth";
 import { useToast } from "../lib/toast";
+import { sound } from "../lib/sound";
 import { cn } from "../lib/cn";
 
 const PALET = ["#BF6F34", "#7FB3E0", "#5FBE7A", "#F4B183", "#9B7EBD", "#D27A8B", "#3D9CA3", "#C9A659"];
@@ -84,6 +85,7 @@ export default function TelsizPanel({ ws, son, oturumId }: Props) {
 
   async function kayitBaslat() {
     if (kayit) return;
+    sound.telsizBaslat();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -158,6 +160,7 @@ export default function TelsizPanel({ ws, son, oturumId }: Props) {
     window.clearInterval(sayacRef.current);
     try { recRef.current?.stop(); } catch { /* noop */ }
     setKayit(false);
+    sound.telsizBitir();
   }
 
   function oynat(b64: string, mime: string) {

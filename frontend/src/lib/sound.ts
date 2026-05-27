@@ -27,6 +27,29 @@ function ton(freq: number, sure: number, baslangic = 0, tip: OscillatorType = "s
   o.stop(t0 + sure / 1000 + 0.02);
 }
 
+function gurultu(sure: number, vol: number, baslangic = 0, freq = 1200, Q = 4) {
+  const c = ac();
+  if (!c) return;
+  const t0 = c.currentTime + baslangic;
+  const samp = Math.max(1, Math.floor(c.sampleRate * (sure / 1000)));
+  const buf = c.createBuffer(1, samp, c.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < samp; i++) data[i] = (Math.random() * 2 - 1) * 0.8;
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  const bp = c.createBiquadFilter();
+  bp.type = "bandpass";
+  bp.frequency.value = freq;
+  bp.Q.value = Q;
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol, t0 + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + sure / 1000);
+  src.connect(bp).connect(g).connect(c.destination);
+  src.start(t0);
+  src.stop(t0 + sure / 1000 + 0.02);
+}
+
 export const sound = {
   arm() { ac(); },
   basarili() {
@@ -43,6 +66,16 @@ export const sound = {
   },
   kameraBip() {
     ton(1480, 70, 0, "square", 0.65, 1800);
+  },
+  telsizBaslat() {
+    ton(1500, 25, 0,     "square", 0.55, 1900);
+    gurultu(80, 0.55, 0.025, 1500, 3);
+    ton(2100, 35, 0.10,  "square", 0.40);
+  },
+  telsizBitir() {
+    gurultu(110, 0.50, 0,    1200, 3);
+    ton(1100, 45, 0.05,  "square", 0.45, 600);
+    gurultu(60, 0.30, 0.10, 700, 2);
   },
 };
 
