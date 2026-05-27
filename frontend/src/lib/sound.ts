@@ -30,16 +30,19 @@ function ton(freq: number, sure: number, baslangic = 0, tip: OscillatorType = "s
 export const sound = {
   arm() { ac(); },
   basarili() {
-    ton(720, 90, 0,    "triangle", 0.22, 1180);
-    ton(1180, 110, 0.10, "triangle", 0.18);
+    ton(720, 90, 0,    "triangle", 0.55, 1180);
+    ton(1180, 110, 0.10, "triangle", 0.50);
   },
   uyari() {
-    ton(740, 90, 0,    "square", 0.18);
-    ton(740, 90, 0.16, "square", 0.18);
+    ton(740, 90, 0,    "square", 0.50);
+    ton(740, 90, 0.16, "square", 0.50);
   },
   hata() {
-    ton(380, 90, 0,    "sawtooth", 0.20, 200);
-    ton(220, 180, 0.10, "sawtooth", 0.18, 140);
+    ton(380, 90, 0,    "sawtooth", 0.55, 200);
+    ton(220, 180, 0.10, "sawtooth", 0.50, 140);
+  },
+  kameraBip() {
+    ton(1480, 70, 0, "square", 0.65, 1800);
   },
 };
 
