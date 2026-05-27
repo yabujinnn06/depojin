@@ -48,6 +48,7 @@ export default function Terminal({ rows, oturumId, baslik = "oturum", stoklar, o
   const [histIdx, setHistIdx] = useState(-1);
   const sonRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const cikisRef = useRef<HTMLDivElement>(null);
 
   const items = useMemo<Item[]>(() => {
     const arr: Item[] = [];
@@ -56,7 +57,10 @@ export default function Terminal({ rows, oturumId, baslik = "oturum", stoklar, o
     return arr.sort((a, b) => a.ts - b.ts);
   }, [rows, cmds]);
 
-  useEffect(() => { sonRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [items.length]);
+  useEffect(() => {
+    const el = cikisRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [items.length]);
 
   function pushOut(lines: string[], renk: string = "info") {
     setCmds(prev => [...prev, { id: `c${Date.now()}_${Math.random()}`, ts: Date.now(), lines, renk }]);
@@ -211,7 +215,8 @@ export default function Terminal({ rows, oturumId, baslik = "oturum", stoklar, o
       </div>
 
       <div
-        className="text-[12px] sm:text-[13px] leading-[1.55] h-[420px] lg:h-[640px] max-h-[640px] overflow-y-auto overflow-x-hidden px-3 py-3 cursor-text"
+        ref={cikisRef}
+        className="text-[12px] sm:text-[13px] leading-[1.55] h-[420px] lg:h-[640px] max-h-[640px] overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-3 cursor-text"
         style={{ background: "linear-gradient(180deg,#0c0c0c 0%,#101010 100%)" }}
         onClick={() => inputRef.current?.focus()}
       >
