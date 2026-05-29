@@ -46,12 +46,13 @@ export default function Login() {
         </label>
 
         <label className="block">
-          <span className="text-[11px] uppercase tracking-[0.18em] text-ink/60">PIN</span>
+          <span className="text-[11px] uppercase tracking-[0.18em] text-ink/60">Sifre / PIN</span>
           <div className="mt-1.5 relative">
             <KeyRound size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40" />
             <input
-              type="password" inputMode="numeric"
-              className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-edge bg-white tracking-[0.5em] text-xl text-center focus:border-deep outline-none"
+              type="password"
+              autoComplete="current-password"
+              className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-edge bg-white focus:border-deep outline-none"
               value={pin} onChange={(e) => setPin(e.target.value)}
             />
           </div>
