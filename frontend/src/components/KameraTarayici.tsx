@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Camera, FlashlightOff, Flashlight, RefreshCcw, Maximize2, Minimize2, Zap } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType, NotFoundException, Result } from "@zxing/library";
@@ -25,6 +25,8 @@ const ZORLANMA_ESIK_MS = 6000;
 const TORCH_AC_MS = 1500;
 const TORCH_KAPA_MS = 800;
 const TORCH_DENEME_MAX = 4;
+const NATIVE_TARAMA_MS = 110;
+const ZXING_GECIKME_MS = 140;
 
 export default function KameraTarayici({ onKod }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -32,7 +34,7 @@ export default function KameraTarayici({ onKod }: Props) {
   const streamRef = useRef<MediaStream | null>(null);
   const sonOkumaRef = useRef<{ kod: string; t: number } | null>(null);
   const sonAktiviteRef = useRef<number>(Date.now());
-  const animRef = useRef<number | null>(null);
+  const loopTimerRef = useRef<number | null>(null);
   const torchPatternRef = useRef<number | null>(null);
   const torchDenemeRef = useRef<number>(0);
 
@@ -119,15 +121,18 @@ export default function KameraTarayici({ onKod }: Props) {
         const v = videoRef.current!;
         v.srcObject = stream;
         await v.play();
-        const loop = async () => {
+        let calisiyor = false;
+        const tek = async () => {
           if (iptal || !videoRef.current) return;
+          if (calisiyor || document.visibilityState !== "visible") return;
+          calisiyor = true;
           try {
             const codes = await det.detect(videoRef.current);
             if (codes && codes.length) tetikle(String(codes[0].rawValue ?? ""));
           } catch { /* ignore */ }
-          animRef.current = requestAnimationFrame(loop);
+          calisiyor = false;
         };
-        loop();
+        loopTimerRef.current = window.setInterval(tek, NATIVE_TARAMA_MS);
         return true;
       } catch { return false; }
     }
@@ -135,8 +140,8 @@ export default function KameraTarayici({ onKod }: Props) {
     async function zxingBaslat(stream: MediaStream) {
       const hints = new Map<DecodeHintType, any>();
       hints.set(DecodeHintType.POSSIBLE_FORMATS, FORMATLAR);
-      hints.set(DecodeHintType.TRY_HARDER, true);
-      const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 50 });
+      hints.set(DecodeHintType.TRY_HARDER, false);
+      const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: ZXING_GECIKME_MS });
       readerRef.current = reader;
       const v = videoRef.current!;
       v.srcObject = stream;
@@ -154,13 +159,13 @@ export default function KameraTarayici({ onKod }: Props) {
           video: secCihaz
             ? {
                 deviceId: { exact: secCihaz },
-                width: { ideal: 1920 }, height: { ideal: 1080 },
-                frameRate: { ideal: 30, max: 60 },
+                width: { ideal: 1280 }, height: { ideal: 720 },
+                frameRate: { ideal: 24, max: 30 },
               }
             : {
                 facingMode: { ideal: "environment" },
-                width: { ideal: 1920 }, height: { ideal: 1080 },
-                frameRate: { ideal: 30, max: 60 },
+                width: { ideal: 1280 }, height: { ideal: 720 },
+                frameRate: { ideal: 24, max: 30 },
                 advanced: [{ focusMode: "continuous" }] as any,
               },
           audio: false,
@@ -186,7 +191,8 @@ export default function KameraTarayici({ onKod }: Props) {
 
     return () => {
       iptal = true;
-      if (animRef.current) cancelAnimationFrame(animRef.current);
+      if (loopTimerRef.current) window.clearInterval(loopTimerRef.current);
+      loopTimerRef.current = null;
       if (torchPatternRef.current) window.clearTimeout(torchPatternRef.current);
       try { readerRef.current && (readerRef.current as any).reset?.(); } catch {}
       readerRef.current = null;
@@ -229,11 +235,9 @@ export default function KameraTarayici({ onKod }: Props) {
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="relative w-[78%] h-[58%] max-w-[520px]">
             <Kose pos="tl" /><Kose pos="tr" /><Kose pos="bl" /><Kose pos="br" />
-            <motion.div
+            <div
               className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent shadow-[0_0_20px_2px_rgba(191,111,52,0.85)]"
-              initial={{ top: "0%" }}
-              animate={{ top: ["0%", "100%", "0%"] }}
-              transition={{ duration: 2.0, repeat: Infinity, ease: "linear" }}
+              style={{ animation: "km-scan 2.4s linear infinite", top: 0 }}
             />
           </div>
         </div>

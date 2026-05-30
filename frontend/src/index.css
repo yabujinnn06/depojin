@@ -20,6 +20,12 @@ table { table-layout: auto; }
   .card { border-radius: 12px; }
 }
 
+@keyframes km-scan {
+  0%   { top: 0%; }
+  50%  { top: 100%; }
+  100% { top: 0%; }
+}
+
 * { scrollbar-width: thin; scrollbar-color: theme('colors.edge') transparent; }
 *::-webkit-scrollbar { width: 8px; height: 8px; }
 *::-webkit-scrollbar-thumb { background: theme('colors.edge'); border-radius: 4px; }
