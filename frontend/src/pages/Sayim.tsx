@@ -166,25 +166,24 @@ export default function Sayim() {
         initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
         className="flex items-end justify-between gap-3 flex-wrap min-w-0"
       >
-        <div className="flex items-start gap-3 min-w-0 flex-1">
+        <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1 basis-full sm:basis-auto">
           <Link to="/" className="mt-1 p-2 rounded-lg border border-edge hover:bg-card transition shrink-0">
             <ArrowLeft size={16} />
           </Link>
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-[0.22em] text-ink/55">Sayim Oturumu</div>
-            <h2 className="font-display text-2xl sm:text-3xl leading-tight truncate">{oturum?.ad ?? "…"}</h2>
-            <div className="text-sm text-ink/65 mt-0.5 flex items-center gap-2 flex-wrap">
-              <span>{oturum?.lokasyon ?? "-"}</span>
-              <span className="opacity-30">·</span>
+            <div className="text-[10px] uppercase tracking-[0.14em] sm:tracking-[0.22em] text-ink/55">Sayim Oturumu</div>
+            <h2 className="font-display text-xl sm:text-3xl leading-tight break-words">{oturum?.ad ?? "…"}</h2>
+            <div className="text-sm text-ink/65 mt-1 flex items-center gap-1.5 flex-wrap">
+              {oturum?.lokasyon && <span>{oturum.lokasyon}</span>}
               <span className={
-                "inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full " +
+                "inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full " +
                 (aktif ? "bg-good/20 text-good ring-1 ring-good/30" : "bg-edge/40 text-ink/60")
               }>
                 <span className={"h-1.5 w-1.5 rounded-full " + (aktif ? "bg-good animate-pulse" : "bg-ink/30")} />
                 {oturum?.durum ?? "..."}
               </span>
               <span className={
-                "inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.16em] px-1.5 py-0.5 rounded " +
+                "inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.14em] px-1.5 py-0.5 rounded " +
                 (wsAcik ? "text-good" : "text-bad")
               } title={wsAcik ? "Realtime baglanti aktif" : "Realtime baglanti yok"}>
                 {wsAcik ? <Wifi size={11} /> : <WifiOff size={11} />}
