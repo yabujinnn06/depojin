@@ -433,7 +433,7 @@ export default function KameraTarayici({ onKod, sonuc, ozet }: Props) {
               )}
               {stokKodu && stokToplam > 0 && (
                 <>
-                  <div className="mt-2 grid grid-cols-4 gap-1.5">
+                  <div className="mt-3 grid grid-cols-4 gap-2">
                     <KStat etiket="Bizde Var" deger={stokSayilan} renk="text-good" buyuk />
                     <KStat etiket="Stokta" deger={stokToplam} renk="text-white" />
                     <KStat etiket="Portal" deger={stokPortal ?? 0} renk="text-sky-300" />
@@ -445,17 +445,15 @@ export default function KameraTarayici({ onKod, sonuc, ozet }: Props) {
                         : "text-bad"}
                       isaret />
                   </div>
-                  <div className="mt-2 h-2 rounded-full bg-white/10 overflow-hidden">
-                    <div className={cn("h-full transition-all",
-                      stokKalan === 0 ? "bg-good" : "bg-accent")}
+                  <div className="mt-2.5 h-2.5 rounded-full bg-white/10 overflow-hidden ring-1 ring-white/15">
+                    <div className={cn("h-full transition-all duration-300",
+                      stokKalan === 0 ? "bg-good" : "bg-gradient-to-r from-accent/70 to-accent")}
                       style={{ width: `${stokYuzde}%` }} />
                   </div>
-                  <div className="mt-1 flex items-center justify-between text-[11px] font-mono text-white/65">
-                    <span>%{stokYuzde} tamamlandi</span>
+                  <div className="mt-1.5 flex items-center justify-between text-[11px] font-mono text-white/70 flex-wrap gap-2">
+                    <span className="font-bold">%{stokYuzde} tamamlandi</span>
                     <span>Kalan: <b className={stokKalan === 0 ? "text-good" : "text-amber-300"}>{stokKalan}</b></span>
-                    {stokTaramaSayisi > 1 && (
-                      <span>Bu stoga {stokTaramaSayisi}. okuma</span>
-                    )}
+                    <span>Bu stoga {stokTaramaSayisi}. okuma</span>
                   </div>
                 </>
               )}

@@ -1,4 +1,4 @@
-const CACHE = "rw-shell-v1";
+const CACHE = "rw-shell-v3";
 const SHELL = ["/", "/index.html", "/manifest.webmanifest", "/icon.svg"];
 
 self.addEventListener("install", (e) => {
