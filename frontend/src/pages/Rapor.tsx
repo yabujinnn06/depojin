@@ -32,8 +32,16 @@ export default function Rapor() {
 
   useEffect(() => { yenile(); }, [yenile]);
   useEffect(() => {
-    const t = setInterval(yenile, 10_000);
-    return () => clearInterval(t);
+    let t: number | undefined;
+    function plan() {
+      window.clearInterval(t);
+      if (document.visibilityState === "visible") {
+        t = window.setInterval(yenile, 15_000);
+      }
+    }
+    plan();
+    document.addEventListener("visibilitychange", plan);
+    return () => { window.clearInterval(t); document.removeEventListener("visibilitychange", plan); };
   }, [yenile]);
 
   async function excelIndir() {

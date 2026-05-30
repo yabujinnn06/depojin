@@ -85,7 +85,8 @@ export default function CanliAkis({ rows, onSec }: Props) {
   const [filtre, setFiltre] = useState<FiltreTip>("tum");
 
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
+    if (document.visibilityState !== "visible") return;
+    const t = setInterval(() => setNow(Date.now()), 2000);
     return () => clearInterval(t);
   }, []);
 

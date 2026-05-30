@@ -1,11 +1,9 @@
-import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { StokOzet } from "../lib/api";
-import ProgressBar from "./ui/ProgressBar";
 import { cn } from "../lib/cn";
 
-export default function StokListesi({ rows, onSec }: { rows: StokOzet[]; onSec?: (s: StokOzet) => void }) {
+function _StokListesi({ rows, onSec }: { rows: StokOzet[]; onSec?: (s: StokOzet) => void }) {
   const [q, setQ] = useState("");
   const [filtre, setFiltre] = useState<"tum" | "eksik" | "tam">("tum");
 
@@ -61,18 +59,16 @@ export default function StokListesi({ rows, onSec }: { rows: StokOzet[]; onSec?:
             </tr>
           </thead>
           <tbody>
-            {filtered.map((s, idx) => {
+            {filtered.map((s) => {
               const tam = s.toplam > 0 && s.sayilan >= s.toplam;
               const fark = s.sayilan - s.portal_sayim;
+              const yuzde = s.toplam > 0 ? Math.min(100, (s.sayilan / s.toplam) * 100) : 0;
               return (
-                <motion.tr
+                <tr
                   key={s.id}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.18, delay: Math.min(idx, 12) * 0.01 }}
                   onClick={() => onSec?.(s)}
                   className={cn(
-                    "border-t border-edge/40 hover:bg-cream/60 transition",
+                    "border-t border-edge/40 hover:bg-cream/60",
                     onSec && "cursor-pointer",
                     tam && "bg-good/10",
                   )}
@@ -86,13 +82,11 @@ export default function StokListesi({ rows, onSec }: { rows: StokOzet[]; onSec?:
                   <td className="px-3 py-2 max-w-[260px]">
                     <div className="truncate">{s.urun_adi}</div>
                     {s.toplam > 0 && (
-                      <ProgressBar
-                        value={s.sayilan}
-                        max={s.toplam}
-                        tone={tam ? "good" : "accent"}
-                        height={3}
-                        className="mt-1"
-                      />
+                      <div className="mt-1 h-[3px] rounded-full bg-edge/40 overflow-hidden">
+                        <div className={cn("h-full rounded-full",
+                          tam ? "bg-good" : "bg-accent")}
+                          style={{ width: `${yuzde}%` }} />
+                      </div>
                     )}
                   </td>
                   <td className="px-3 py-2 text-right font-mono tabular-nums font-semibold">{s.sayilan}</td>
@@ -108,7 +102,7 @@ export default function StokListesi({ rows, onSec }: { rows: StokOzet[]; onSec?:
                       </span>
                     )}
                   </td>
-                </motion.tr>
+                </tr>
               );
             })}
             {filtered.length === 0 && (
@@ -122,3 +116,5 @@ export default function StokListesi({ rows, onSec }: { rows: StokOzet[]; onSec?:
     </div>
   );
 }
+
+export default memo(_StokListesi);

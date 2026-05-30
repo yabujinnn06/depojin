@@ -80,7 +80,7 @@ export default function Sayim() {
         return;
       }
       window.clearTimeout(yenileRef.current);
-      yenileRef.current = window.setTimeout(yenile, 150);
+      yenileRef.current = window.setTimeout(yenile, 400);
     });
     ws.durum(setWsAcik);
     setWsRef(ws);

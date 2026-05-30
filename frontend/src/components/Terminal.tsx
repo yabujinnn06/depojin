@@ -1,5 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
-import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, memo, useEffect, useMemo, useRef, useState } from "react";
 import { api, LogSatir, StokOzet } from "../lib/api";
 import { cn } from "../lib/cn";
 
@@ -41,7 +40,7 @@ type Props = {
 
 const KOMUTLAR = ["help", "clear", "tara", "ozet", "bul", "stok", "users", "audit", "kim", "history"];
 
-export default function Terminal({ rows, oturumId, baslik = "oturum", stoklar, onSec }: Props) {
+function _Terminal({ rows, oturumId, baslik = "oturum", stoklar, onSec }: Props) {
   const [cmds, setCmds] = useState<CmdOut[]>([]);
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([]);
@@ -234,48 +233,42 @@ export default function Terminal({ rows, oturumId, baslik = "oturum", stoklar, o
           </div>
         )}
 
-        <AnimatePresence initial={false}>
-          {items.map(it => it.tip === "scan" ? (
-            <motion.div
-              key={it.id}
-              initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              onClick={() => onSec?.(it.row)}
-              className="flex items-start gap-2 hover:bg-white/[0.04] -mx-3 px-3 cursor-pointer whitespace-pre-wrap break-words"
-            >
-              <span className="text-zinc-500 shrink-0">[{saat(it.ts)}]</span>
-              <span className={cn("shrink-0 w-9 font-bold", RENK[it.row.durum] ?? "text-sky-400")}>
-                {ET[it.row.durum] ?? it.row.durum.slice(0, 4).toUpperCase()}
-              </span>
-              <span className="text-zinc-600 shrink-0">::</span>
-              <span className="text-zinc-200 min-w-0 break-words">
-                <span className="text-zinc-50 font-semibold">{it.row.seri_giris}</span>
-                {it.row.stok_kodu && (
-                  <>
-                    <span className="text-zinc-600"> · </span>
-                    <span className="text-amber-300">{it.row.stok_kodu}</span>{" "}
-                    <span className="text-zinc-400">{it.row.urun_adi}</span>
-                  </>
-                )}
-                {!it.row.stok_kodu && it.row.aciklama && (
-                  <><span className="text-zinc-600"> · </span><span className="text-zinc-500">{it.row.aciklama}</span></>
-                )}
-                {it.row.kullanici_ad && (
-                  <><span className="text-zinc-600"> @</span><span className="text-fuchsia-300">{it.row.kullanici_ad}</span></>
-                )}
-              </span>
-            </motion.div>
-          ) : (
-            <motion.div
-              key={it.id}
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.12 }}
-              className={cn("py-0.5 whitespace-pre-wrap break-words", RENK[it.renk] ?? "text-zinc-300")}
-            >
-              {it.lines.map((l, i) => <div key={i}>{l}</div>)}
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {items.map(it => it.tip === "scan" ? (
+          <div
+            key={it.id}
+            onClick={() => onSec?.(it.row)}
+            className="flex items-start gap-2 hover:bg-white/[0.04] -mx-3 px-3 cursor-pointer whitespace-pre-wrap break-words"
+          >
+            <span className="text-zinc-500 shrink-0">[{saat(it.ts)}]</span>
+            <span className={cn("shrink-0 w-9 font-bold", RENK[it.row.durum] ?? "text-sky-400")}>
+              {ET[it.row.durum] ?? it.row.durum.slice(0, 4).toUpperCase()}
+            </span>
+            <span className="text-zinc-600 shrink-0">::</span>
+            <span className="text-zinc-200 min-w-0 break-words">
+              <span className="text-zinc-50 font-semibold">{it.row.seri_giris}</span>
+              {it.row.stok_kodu && (
+                <>
+                  <span className="text-zinc-600"> · </span>
+                  <span className="text-amber-300">{it.row.stok_kodu}</span>{" "}
+                  <span className="text-zinc-400">{it.row.urun_adi}</span>
+                </>
+              )}
+              {!it.row.stok_kodu && it.row.aciklama && (
+                <><span className="text-zinc-600"> · </span><span className="text-zinc-500">{it.row.aciklama}</span></>
+              )}
+              {it.row.kullanici_ad && (
+                <><span className="text-zinc-600"> @</span><span className="text-fuchsia-300">{it.row.kullanici_ad}</span></>
+              )}
+            </span>
+          </div>
+        ) : (
+          <div
+            key={it.id}
+            className={cn("py-0.5 whitespace-pre-wrap break-words", RENK[it.renk] ?? "text-zinc-300")}
+          >
+            {it.lines.map((l, i) => <div key={i}>{l}</div>)}
+          </div>
+        ))}
 
         <div ref={sonRef} />
       </div>
@@ -300,3 +293,5 @@ export default function Terminal({ rows, oturumId, baslik = "oturum", stoklar, o
     </div>
   );
 }
+
+export default memo(_Terminal);
