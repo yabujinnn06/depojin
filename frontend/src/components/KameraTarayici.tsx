@@ -1,12 +1,34 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Camera, FlashlightOff, Flashlight, RefreshCcw, Maximize2, Minimize2, Zap } from "lucide-react";
+import { Camera, FlashlightOff, Flashlight, RefreshCcw, Maximize2, Minimize2, Zap, CheckCircle2, AlertTriangle, XCircle, GitMerge } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType, NotFoundException, Result } from "@zxing/library";
 import { sound } from "../lib/sound";
 import { cn } from "../lib/cn";
+import { Tarama } from "../lib/api";
 
-type Props = { onKod: (kod: string) => void };
+type Props = { onKod: (kod: string) => void; sonuc?: Tarama | null };
+
+type Kayit = {
+  id: number;
+  kod: string;
+  ts: number;
+  sonuc?: Tarama;
+};
+
+const D_RENK: Record<string, string> = {
+  basarili: "border-good/40 bg-good/15 text-good",
+  mukerrer: "border-warn/40 bg-warn/15 text-warn",
+  bulunamadi: "border-bad/40 bg-bad/15 text-bad",
+  cakisma: "border-warn/50 bg-warn/20 text-warn",
+};
+const D_IKON: Record<string, any> = {
+  basarili: CheckCircle2, mukerrer: AlertTriangle,
+  bulunamadi: XCircle, cakisma: GitMerge,
+};
+const D_ET: Record<string, string> = {
+  basarili: "OK", mukerrer: "DUP", bulunamadi: "404", cakisma: "CONF",
+};
 
 const FORMATLAR = [
   BarcodeFormat.QR_CODE, BarcodeFormat.DATA_MATRIX,
@@ -28,7 +50,13 @@ const TORCH_DENEME_MAX = 4;
 const NATIVE_TARAMA_MS = 110;
 const ZXING_GECIKME_MS = 140;
 
-export default function KameraTarayici({ onKod }: Props) {
+function normalize(s: string): string {
+  return s.toUpperCase().replace(/[\s\r\n\t]/g, "");
+}
+
+let _seq = 1;
+
+export default function KameraTarayici({ onKod, sonuc }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -48,6 +76,7 @@ export default function KameraTarayici({ onKod }: Props) {
   const [hata, setHata] = useState<string | null>(null);
   const [sayac, setSayac] = useState(0);
   const [flas, setFlas] = useState(0);
+  const [gecmis, setGecmis] = useState<Kayit[]>([]);
 
   const torchUygula = useCallback(async (acik: boolean) => {
     const track = streamRef.current?.getVideoTracks()[0];
@@ -89,9 +118,28 @@ export default function KameraTarayici({ onKod }: Props) {
     setFlas(f => f + 1);
     try { navigator.vibrate?.([35, 20, 35]); } catch {}
     sound.kameraBip();
+    setGecmis(g => [{ id: _seq++, kod, ts: now }, ...g].slice(0, 6));
     onKod(kod);
     otoTorchDur();
   }, [onKod, otoTorchDur]);
+
+  useEffect(() => {
+    if (!sonuc?.seri) return;
+    const hedef = normalize(sonuc.seri);
+    setGecmis(g => {
+      let bulundu = false;
+      const arr = g.map(k => {
+        if (bulundu) return k;
+        if (k.sonuc) return k;
+        if (normalize(k.kod) === hedef) {
+          bulundu = true;
+          return { ...k, sonuc };
+        }
+        return k;
+      });
+      return arr;
+    });
+  }, [sonuc]);
 
   useEffect(() => {
     navigator.mediaDevices?.enumerateDevices().then(d => {
@@ -305,6 +353,71 @@ export default function KameraTarayici({ onKod }: Props) {
           </div>
         )}
       </div>
+      {gecmis.length > 0 && (
+        <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
+          <AnimatePresence initial={false}>
+            {gecmis.map((k, idx) => {
+              const dur = k.sonuc?.durum;
+              const Ikon = dur && D_IKON[dur];
+              const aktif = idx === 0;
+              return (
+                <motion.div
+                  key={k.id}
+                  initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                  animate={{ opacity: aktif ? 1 : 0.65, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.18 }}
+                  className={cn(
+                    "card border px-3 py-2 flex items-start gap-2 text-sm",
+                    dur ? D_RENK[dur] : "border-edge/60 bg-card text-ink/80",
+                    aktif && "ring-2 ring-accent/30"
+                  )}
+                >
+                  <div className="text-[10px] font-mono text-ink/50 w-12 shrink-0 mt-0.5">
+                    {new Date(k.ts).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                  </div>
+                  <div className="flex items-center gap-1.5 w-14 shrink-0 mt-0.5">
+                    {Ikon ? <Ikon size={14} /> : (
+                      <span className="inline-block h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin opacity-60" />
+                    )}
+                    <span className="text-[10px] font-bold tracking-wider">
+                      {dur ? D_ET[dur] : "..."}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-mono text-sm font-semibold text-ink break-all">{k.kod}</div>
+                    {k.sonuc?.stok_kodu && (
+                      <div className="text-xs text-ink/70 mt-0.5">
+                        <span className="font-mono font-bold">{k.sonuc.stok_kodu}</span>{" · "}
+                        <span className="text-ink/65">{k.sonuc.urun_adi}</span>
+                      </div>
+                    )}
+                    {k.sonuc && (k.sonuc.toplam != null) && (
+                      <div className="text-[11px] text-ink/65 mt-0.5 font-mono">
+                        sayim {k.sonuc.sayilan}/{k.sonuc.toplam}
+                        {k.sonuc.portal_sayim != null && <> · portal {k.sonuc.portal_sayim}</>}
+                        {k.sonuc.portal_fark != null && (
+                          <span className={cn("ml-1",
+                            k.sonuc.portal_fark === 0 ? "text-good"
+                              : k.sonuc.portal_fark > 0 ? "text-warn"
+                              : "text-bad"
+                          )}>
+                            (fark {k.sonuc.portal_fark > 0 ? "+" : ""}{k.sonuc.portal_fark})
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {k.sonuc?.mesaj && !k.sonuc?.stok_kodu && (
+                      <div className="text-[11px] text-ink/60 mt-0.5">{k.sonuc.mesaj}</div>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      )}
+
       <div className="text-[11px] text-ink/55 flex items-center gap-2 flex-wrap">
         <Camera size={12} />
         <span>Cerceveye yerlestir; otomatik okur. {torchVar && otoTorch ? "Karanlikta oto-flas devreye girer." : ""}</span>

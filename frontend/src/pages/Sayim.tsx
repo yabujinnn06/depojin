@@ -278,7 +278,7 @@ export default function Sayim() {
               </button>
               {kameraAcik && (
                 <div className="p-3 border-t border-edge/60">
-                  <KameraTarayici onKod={tara} />
+                  <KameraTarayici onKod={tara} sonuc={son} />
                 </div>
               )}
             </div>
