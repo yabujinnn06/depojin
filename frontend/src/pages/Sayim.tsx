@@ -22,7 +22,7 @@ import SeriDetayModal from "../components/SeriDetayModal";
 import TopluIslemler from "../components/TopluIslemler";
 import PortalKarsilastirma from "../components/PortalKarsilastirma";
 import PresencePanel from "../components/PresencePanel";
-import TelsizPanel from "../components/TelsizPanel";
+import TelsizFloating from "../components/TelsizFloating";
 import { User as UserT } from "../lib/api";
 
 export default function Sayim() {
@@ -299,9 +299,6 @@ export default function Sayim() {
           <BlurFade delay={0.48} direction="left">
             <PresencePanel rows={presence} benimId={user?.id ?? null} />
           </BlurFade>
-          <BlurFade delay={0.49} direction="left">
-            <TelsizPanel ws={wsRef} son={sonChat} oturumId={oturumId} />
-          </BlurFade>
           <BlurFade delay={0.5} direction="left">
             <Terminal
               rows={log}
@@ -321,6 +318,7 @@ export default function Sayim() {
         onClose={() => setDetayStok(null)}
       />
       <SeriDetayModal row={detayLog} onClose={() => setDetayLog(null)} />
+      <TelsizFloating ws={wsRef} son={sonChat} oturumId={oturumId} />
     </div>
   );
 }
