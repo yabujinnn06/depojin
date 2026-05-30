@@ -265,24 +265,22 @@ export default function Sayim() {
               onBitti={() => { setSon(null); yenile(); }}
             />
           )}
-          <BlurFade delay={0.4}>
-            <div className="card overflow-hidden">
-              <button
-                onClick={() => setKameraAcik(v => !v)}
-                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-cream transition"
-              >
-                <span className="flex items-center gap-2 text-sm font-medium">
-                  <Camera size={16} /> Kamera tarama
-                </span>
-                <span className="text-xs text-ink/55">{kameraAcik ? "Kapat" : "Ac"}</span>
-              </button>
-              {kameraAcik && (
-                <div className="p-3 border-t border-edge/60">
-                  <KameraTarayici onKod={tara} sonuc={son} />
-                </div>
-              )}
-            </div>
-          </BlurFade>
+          <div className="card overflow-hidden">
+            <button
+              onClick={() => setKameraAcik(v => !v)}
+              className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-cream transition"
+            >
+              <span className="flex items-center gap-2 text-sm font-medium">
+                <Camera size={16} /> Kamera tarama
+              </span>
+              <span className="text-xs text-ink/55">{kameraAcik ? "Kapat" : "Ac"}</span>
+            </button>
+            {kameraAcik && (
+              <div className="p-3 border-t border-edge/60">
+                <KameraTarayici onKod={tara} sonuc={son} />
+              </div>
+            )}
+          </div>
           <BlurFade delay={0.42}>
             <TopluIslemler
               oturumId={oturumId}
