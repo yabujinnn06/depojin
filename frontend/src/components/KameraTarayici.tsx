@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Camera, FlashlightOff, Flashlight, RefreshCcw, Maximize2, Minimize2, Zap, CheckCircle2, AlertTriangle, XCircle, GitMerge } from "lucide-react";
+import { Camera, FlashlightOff, Flashlight, RefreshCcw, Maximize2, Minimize2, Zap, CheckCircle2, AlertTriangle, XCircle, GitMerge, X, Loader2 } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType, NotFoundException, Result } from "@zxing/library";
 import { sound } from "../lib/sound";
 import { cn } from "../lib/cn";
-import { Tarama } from "../lib/api";
+import { Ozet, Tarama } from "../lib/api";
 
-type Props = { onKod: (kod: string) => void; sonuc?: Tarama | null };
+type Props = {
+  onKod: (kod: string) => void;
+  sonuc?: Tarama | null;
+  ozet?: Ozet | null;
+};
 
 type Kayit = {
   id: number;
@@ -57,7 +61,7 @@ function normalize(s: string): string {
 
 let _seq = 1;
 
-export default function KameraTarayici({ onKod, sonuc }: Props) {
+export default function KameraTarayici({ onKod, sonuc, ozet }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -78,6 +82,7 @@ export default function KameraTarayici({ onKod, sonuc }: Props) {
   const [sayac, setSayac] = useState(0);
   const [flas, setFlas] = useState(0);
   const [gecmis, setGecmis] = useState<Kayit[]>([]);
+  const [hazir, setHazir] = useState(false);
 
   const torchUygula = useCallback(async (acik: boolean) => {
     const track = streamRef.current?.getVideoTracks()[0];
@@ -143,13 +148,10 @@ export default function KameraTarayici({ onKod, sonuc }: Props) {
   }, [sonuc]);
 
   useEffect(() => {
+    if (!secCihaz) return;
     navigator.mediaDevices?.enumerateDevices().then(d => {
       const v = d.filter(x => x.kind === "videoinput");
-      setCihazlar(v);
-      if (!secCihaz && v.length) {
-        const arka = v.find(x => /back|rear|arka|environment/i.test(x.label)) ?? v[v.length - 1];
-        setSecCihaz(arka.deviceId);
-      }
+      if (v.length) setCihazlar(v);
     }).catch(() => {});
   }, [secCihaz]);
 
@@ -157,6 +159,7 @@ export default function KameraTarayici({ onKod, sonuc }: Props) {
     if (!acik) return;
     let iptal = false;
     setHata(null);
+    setHazir(false);
     sonAktiviteRef.current = Date.now();
 
     async function nativeBaslat(stream: MediaStream) {
@@ -204,24 +207,29 @@ export default function KameraTarayici({ onKod, sonuc }: Props) {
 
     async function baslat() {
       try {
-        const constraints: MediaStreamConstraints = {
-          video: secCihaz
-            ? {
-                deviceId: { exact: secCihaz },
-                width: { ideal: 1280 }, height: { ideal: 720 },
-                frameRate: { ideal: 24, max: 30 },
-              }
-            : {
-                facingMode: { ideal: "environment" },
-                width: { ideal: 1280 }, height: { ideal: 720 },
-                frameRate: { ideal: 24, max: 30 },
-                advanced: [{ focusMode: "continuous" }] as any,
-              },
-          audio: false,
-        };
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        const video: MediaTrackConstraints = secCihaz
+          ? { deviceId: { exact: secCihaz } }
+          : { facingMode: { ideal: "environment" } };
+        Object.assign(video, {
+          width: { ideal: 1280 }, height: { ideal: 720 },
+          frameRate: { ideal: 24, max: 30 },
+        });
+        const stream = await navigator.mediaDevices.getUserMedia({ video, audio: false });
         if (iptal) { stream.getTracks().forEach(t => t.stop()); return; }
         streamRef.current = stream;
+        setHazir(true);
+
+        if (!secCihaz) {
+          try {
+            const allDev = await navigator.mediaDevices.enumerateDevices();
+            const vs = allDev.filter(x => x.kind === "videoinput");
+            if (vs.length) {
+              setCihazlar(vs);
+              const arka = vs.find(x => /back|rear|arka|environment/i.test(x.label)) ?? vs[vs.length - 1];
+              setSecCihaz(arka.deviceId);
+            }
+          } catch { /* ignore */ }
+        }
 
         const track = stream.getVideoTracks()[0];
         try {
@@ -276,34 +284,217 @@ export default function KameraTarayici({ onKod, sonuc }: Props) {
     setSecCihaz(next.deviceId);
   }
 
-  const icerik = (
-    <div className={cn("space-y-2", tam && "fixed inset-0 z-[55] bg-deeper p-3 sm:p-6 flex flex-col overflow-auto")}
-      style={tam ? { paddingTop: "max(0.75rem, env(safe-area-inset-top))" } : undefined}>
-      <div className={cn("relative overflow-hidden rounded-xl bg-deeper",
-        tam ? "w-full max-w-3xl mx-auto aspect-video shrink-0" : "aspect-[4/3] sm:aspect-video")}>
-        <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover"
-          playsInline muted autoPlay />
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="relative w-[78%] h-[58%] max-w-[520px]">
-            <Kose pos="tl" /><Kose pos="tr" /><Kose pos="bl" /><Kose pos="br" />
-            <div
-              className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent shadow-[0_0_20px_2px_rgba(191,111,52,0.85)]"
-              style={{ animation: "km-scan 2.4s linear infinite", top: 0 }}
-            />
+  const sonAktif = gecmis[0];
+
+  const videoBlok = (
+    <div className={cn("relative overflow-hidden bg-deeper",
+      tam ? "h-full w-full" : "aspect-[4/3] sm:aspect-video rounded-xl")}>
+      <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover"
+        playsInline muted autoPlay />
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="relative w-[78%] h-[58%] max-w-[640px]">
+          <Kose pos="tl" /><Kose pos="tr" /><Kose pos="bl" /><Kose pos="br" />
+          <div
+            className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent shadow-[0_0_20px_2px_rgba(191,111,52,0.85)]"
+            style={{ animation: "km-scan 2.4s linear infinite", top: 0 }}
+          />
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {flas > 0 && (
+          <motion.div
+            key={flas}
+            initial={{ opacity: 0.55 }} animate={{ opacity: 0 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="pointer-events-none absolute inset-0 bg-good ring-4 ring-good/80"
+          />
+        )}
+      </AnimatePresence>
+
+      {!hazir && !hata && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-deeper/70 text-white">
+          <Loader2 size={28} className="animate-spin text-accent" />
+          <div className="text-xs uppercase tracking-[0.22em] opacity-80">Kamera baslatiliyor</div>
+        </div>
+      )}
+
+      {hata && (
+        <div className="absolute inset-0 flex items-center justify-center text-bad text-xs p-3 text-center bg-black/70 backdrop-blur">
+          {hata}
+        </div>
+      )}
+    </div>
+  );
+
+  const ucBar = (
+    <div className={cn("flex items-center gap-1",
+      tam ? "" : "ml-auto"
+    )}>
+      {torchVar && (
+        <button onClick={() => setOtoTorch(v => !v)}
+          title={otoTorch ? "Oto-flasi kapat" : "Oto-flasi ac"}
+          className={cn(
+            "rounded-md text-white flex items-center justify-center backdrop-blur",
+            tam ? "h-11 w-11" : "h-8 w-8",
+            otoTorch ? "bg-good/40 hover:bg-good/60" : "bg-black/40 hover:bg-black/60"
+          )}>
+          <Zap size={tam ? 18 : 14} />
+        </button>
+      )}
+      {torchVar && (
+        <button onClick={torchToggle} title="Flas"
+          className={cn("rounded-md bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur",
+            tam ? "h-11 w-11" : "h-8 w-8")}>
+          {torch ? <Flashlight size={tam ? 18 : 14} /> : <FlashlightOff size={tam ? 18 : 14} />}
+        </button>
+      )}
+      {cihazlar.length > 1 && (
+        <button onClick={digerKamera} title="Diger kamera"
+          className={cn("rounded-md bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur",
+            tam ? "h-11 w-11" : "h-8 w-8")}>
+          <RefreshCcw size={tam ? 18 : 14} />
+        </button>
+      )}
+      <button onClick={() => setTam(t => !t)} title={tam ? "Kucult" : "Buyut"}
+        className={cn("rounded-md bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur",
+          tam ? "h-11 w-11" : "h-8 w-8")}>
+        {tam ? <X size={tam ? 20 : 14} /> : <Maximize2 size={14} />}
+      </button>
+    </div>
+  );
+
+  if (tam) {
+    const dur = sonAktif?.sonuc?.durum;
+    const Ikon = dur && D_IKON[dur];
+    const sayilanYuzde = ozet && ozet.toplam_seri > 0 ? Math.round(ozet.sayilan_seri / ozet.toplam_seri * 100) : 0;
+    const tamBody = (
+      <div className="fixed inset-0 z-[55] bg-deeper text-white flex flex-col"
+        style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
+        <div className="px-3 py-2 flex items-center gap-3 bg-deeper/95 backdrop-blur border-b border-white/5">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.22em] text-good">
+              <span className="h-1.5 w-1.5 rounded-full bg-good animate-pulse" /> Tarama
+            </span>
+            <span className="text-[11px] font-mono text-white/55">{sayac} okuma</span>
+            {otoTorch && torchVar && (
+              <span className="text-[10px] font-mono text-good/85 inline-flex items-center gap-1">
+                <Zap size={11} /> oto-flas
+              </span>
+            )}
           </div>
+          {ucBar}
         </div>
 
-        <AnimatePresence>
-          {flas > 0 && (
-            <motion.div
-              key={flas}
-              initial={{ opacity: 0.6 }} animate={{ opacity: 0 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
-              className="pointer-events-none absolute inset-0 bg-good ring-4 ring-good/80"
-            />
-          )}
-        </AnimatePresence>
+        <div className="relative flex-1 min-h-0">
+          {videoBlok}
+        </div>
 
+        <div className="px-3 py-2 bg-deeper/95 backdrop-blur border-t border-white/5">
+          {sonAktif ? (
+            <div className={cn("rounded-xl border-2 p-3 transition-colors",
+              dur === "basarili" && "bg-good/20 border-good/60",
+              dur === "mukerrer" && "bg-warn/20 border-warn/60",
+              dur === "bulunamadi" && "bg-bad/20 border-bad/60",
+              dur === "cakisma" && "bg-warn/25 border-warn/70",
+              !dur && "bg-white/5 border-white/20"
+            )}>
+              <div className="flex items-center gap-2">
+                {Ikon ? <Ikon size={22} className={cn(
+                  dur === "basarili" && "text-good",
+                  dur === "mukerrer" && "text-warn",
+                  dur === "bulunamadi" && "text-bad",
+                  dur === "cakisma" && "text-warn",
+                )} /> : (
+                  <Loader2 size={22} className="animate-spin text-white/60" />
+                )}
+                <span className="font-mono text-base font-bold text-white break-all flex-1 min-w-0">
+                  {sonAktif.kod}
+                </span>
+                <span className="text-[10px] font-mono text-white/55 shrink-0">
+                  {new Date(sonAktif.ts).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                </span>
+              </div>
+              {sonAktif.sonuc?.stok_kodu && (
+                <div className="mt-1 text-sm">
+                  <span className="font-mono font-bold text-accent">{sonAktif.sonuc.stok_kodu}</span>
+                  <span className="text-white/80"> · {sonAktif.sonuc.urun_adi}</span>
+                </div>
+              )}
+              {sonAktif.sonuc && sonAktif.sonuc.toplam != null && (
+                <div className="mt-1 grid grid-cols-3 gap-2 text-sm font-mono">
+                  <div>
+                    <div className="text-[9px] uppercase tracking-wider text-white/55">Bu Stok</div>
+                    <div className="text-base font-bold">{sonAktif.sonuc.sayilan}/{sonAktif.sonuc.toplam}</div>
+                  </div>
+                  {sonAktif.sonuc.portal_sayim != null && (
+                    <div>
+                      <div className="text-[9px] uppercase tracking-wider text-white/55">Portal</div>
+                      <div className="text-base font-bold">{sonAktif.sonuc.portal_sayim}</div>
+                    </div>
+                  )}
+                  {sonAktif.sonuc.portal_fark != null && (
+                    <div>
+                      <div className="text-[9px] uppercase tracking-wider text-white/55">Fark</div>
+                      <div className={cn("text-base font-bold",
+                        sonAktif.sonuc.portal_fark === 0 ? "text-good"
+                          : sonAktif.sonuc.portal_fark > 0 ? "text-warn"
+                          : "text-bad")}>
+                        {sonAktif.sonuc.portal_fark > 0 ? "+" : ""}{sonAktif.sonuc.portal_fark}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {sonAktif.sonuc?.mesaj && !sonAktif.sonuc?.stok_kodu && (
+                <div className="mt-1 text-xs text-white/80">{sonAktif.sonuc.mesaj}</div>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-xl border-2 border-white/15 p-3 text-center text-white/55 text-sm">
+              Cerceveye barkod yerlestir, otomatik okuyacak
+            </div>
+          )}
+
+          {ozet && (
+            <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+              <Pill etiket="Sayilan" deger={ozet.sayilan_seri} renk="text-good" alt={`${sayilanYuzde}%`} />
+              <Pill etiket="Kalan" deger={ozet.kalan_seri} renk="text-amber-300" />
+              <Pill etiket="Portal Fark" deger={ozet.portal_fark} renk={ozet.portal_fark === 0 ? "text-good" : ozet.portal_fark > 0 ? "text-warn" : "text-bad"} isaret />
+            </div>
+          )}
+
+          {gecmis.length > 1 && (
+            <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
+              {gecmis.slice(1, 6).map(k => {
+                const d = k.sonuc?.durum;
+                const Ik = d && D_IKON[d];
+                return (
+                  <div key={k.id} className={cn(
+                    "shrink-0 px-2 py-1 rounded-md text-[11px] font-mono inline-flex items-center gap-1 border",
+                    d === "basarili" && "bg-good/15 border-good/40 text-good",
+                    d === "mukerrer" && "bg-warn/15 border-warn/40 text-warn",
+                    d === "bulunamadi" && "bg-bad/15 border-bad/40 text-bad",
+                    d === "cakisma" && "bg-warn/20 border-warn/50 text-warn",
+                    !d && "bg-white/10 border-white/20 text-white/70"
+                  )}>
+                    {Ik && <Ik size={11} />}
+                    <span className="truncate max-w-[120px]">{k.kod}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+    return typeof document !== "undefined" ? createPortal(tamBody, document.body) : tamBody;
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="relative">
+        {videoBlok}
         <div className="absolute top-2 left-2 right-2 flex items-center gap-2 flex-wrap">
           <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.18em] text-white/90 px-2 py-0.5 rounded bg-black/40 backdrop-blur">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-good animate-pulse" /> tarama
@@ -313,48 +504,8 @@ export default function KameraTarayici({ onKod, sonuc }: Props) {
               {sayac} okuma
             </span>
           )}
-          {torchVar && (
-            <span className={cn(
-              "text-[10px] font-mono px-2 py-0.5 rounded bg-black/40 backdrop-blur inline-flex items-center gap-1",
-              otoTorch ? "text-good" : "text-white/60"
-            )}>
-              <Zap size={11} /> oto-flas {otoTorch ? "aktif" : "kapali"}
-            </span>
-          )}
-          <div className="ml-auto flex items-center gap-1">
-            {torchVar && (
-              <button onClick={() => setOtoTorch(v => !v)}
-                title={otoTorch ? "Oto-flasi kapat" : "Oto-flasi ac"}
-                className={cn(
-                  "h-8 w-8 rounded-md text-white flex items-center justify-center backdrop-blur",
-                  otoTorch ? "bg-good/40 hover:bg-good/60" : "bg-black/40 hover:bg-black/60"
-                )}>
-                <Zap size={14} />
-              </button>
-            )}
-            {torchVar && (
-              <button onClick={torchToggle} title="Flas (manuel)"
-                className="h-8 w-8 rounded-md bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur">
-                {torch ? <Flashlight size={14} /> : <FlashlightOff size={14} />}
-              </button>
-            )}
-            {cihazlar.length > 1 && (
-              <button onClick={digerKamera} title="Diger kamera"
-                className="h-8 w-8 rounded-md bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur">
-                <RefreshCcw size={14} />
-              </button>
-            )}
-            <button onClick={() => setTam(t => !t)} title={tam ? "Kucult" : "Buyut"}
-              className="h-8 w-8 rounded-md bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur">
-              {tam ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-            </button>
-          </div>
+          {ucBar}
         </div>
-        {hata && (
-          <div className="absolute inset-x-0 bottom-0 p-3 text-center text-bad text-xs bg-black/60 backdrop-blur">
-            {hata}
-          </div>
-        )}
       </div>
       {gecmis.length > 0 && (
         <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
@@ -399,15 +550,6 @@ export default function KameraTarayici({ onKod, sonuc }: Props) {
                       <div className="text-[11px] text-ink/65 mt-0.5 font-mono">
                         sayim {k.sonuc.sayilan}/{k.sonuc.toplam}
                         {k.sonuc.portal_sayim != null && <> · portal {k.sonuc.portal_sayim}</>}
-                        {k.sonuc.portal_fark != null && (
-                          <span className={cn("ml-1",
-                            k.sonuc.portal_fark === 0 ? "text-good"
-                              : k.sonuc.portal_fark > 0 ? "text-warn"
-                              : "text-bad"
-                          )}>
-                            (fark {k.sonuc.portal_fark > 0 ? "+" : ""}{k.sonuc.portal_fark})
-                          </span>
-                        )}
                       </div>
                     )}
                     {k.sonuc?.mesaj && !k.sonuc?.stok_kodu && (
@@ -420,18 +562,20 @@ export default function KameraTarayici({ onKod, sonuc }: Props) {
           </AnimatePresence>
         </div>
       )}
-
-      <div className={cn("text-[11px] flex items-center gap-2 flex-wrap",
-        tam ? "text-white/65" : "text-ink/55")}>
-        <Camera size={12} />
-        <span>Cerceveye yerlestir; otomatik okur. {torchVar && otoTorch ? "Karanlikta oto-flas devreye girer." : ""}</span>
-      </div>
     </div>
   );
+}
 
-  return tam && typeof document !== "undefined"
-    ? createPortal(icerik, document.body)
-    : icerik;
+function Pill({ etiket, deger, renk, alt, isaret }: { etiket: string; deger: number; renk: string; alt?: string; isaret?: boolean }) {
+  return (
+    <div className="rounded-lg bg-white/8 px-2 py-1.5 ring-1 ring-white/15">
+      <div className="text-[9px] uppercase tracking-[0.18em] text-white/55">{etiket}</div>
+      <div className={cn("font-display text-xl font-bold leading-none tabular-nums mt-0.5", renk)}>
+        {isaret && deger > 0 ? "+" : ""}{deger.toLocaleString("tr-TR")}
+      </div>
+      {alt && <div className="text-[10px] text-white/55 font-mono mt-0.5">{alt}</div>}
+    </div>
+  );
 }
 
 function Kose({ pos }: { pos: "tl" | "tr" | "bl" | "br" }) {
