@@ -378,6 +378,8 @@ export default function KameraTarayici({ onKod, sonuc, ozet }: Props) {
     const stokYuzde = stokToplam > 0 ? Math.min(100, Math.round((stokSayilan / stokToplam) * 100)) : 0;
     const stokPortal = sonAktif?.sonuc?.portal_sayim ?? null;
     const stokFark = sonAktif?.sonuc?.portal_fark;
+    const bilinmeyenSayisi = gecmis.filter(k => k.sonuc?.durum === "bulunamadi").length;
+    const basariliSayisi = gecmis.filter(k => k.sonuc?.durum === "basarili").length;
     const tamBody = (
       <div className="fixed inset-0 z-[55] bg-deeper text-white flex flex-col"
         style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
@@ -458,12 +460,32 @@ export default function KameraTarayici({ onKod, sonuc, ozet }: Props) {
                 </>
               )}
               {sonAktif.sonuc?.mesaj && !stokKodu && (
-                <div className="mt-1 text-xs text-white/80">{sonAktif.sonuc.mesaj}</div>
+                <div className="mt-2 space-y-1.5">
+                  <div className="text-sm text-white/85">{sonAktif.sonuc.mesaj}</div>
+                  {dur === "bulunamadi" && (
+                    <div className="text-[11px] text-white/65 leading-relaxed">
+                      Bu kod stok listende yok. Kameradan cik (
+                      <X size={11} className="inline -mt-0.5" />
+                      ), <b className="text-white">Bilinmeyen Seri</b> panelinden mevcut stoga ekle
+                      ya da yeni stok yarat. Bu oturumda <b>{bilinmeyenSayisi}</b> bilinmeyen okuma.
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           ) : (
-            <div className="rounded-xl border-2 border-white/15 p-3 text-center text-white/55 text-sm">
-              Cerceveye barkod yerlestir, otomatik okuyacak
+            <div className="rounded-xl border-2 border-white/15 p-3 text-center text-white/65 text-sm">
+              Cerceveye barkod yerlestir, otomatik okuyacak. Bilinen bir kod okuyunca stoga ait <b>Bizde Var / Stokta / Portal / Fark</b> detayini gosterir.
+            </div>
+          )}
+
+          {(basariliSayisi > 0 || bilinmeyenSayisi > 0) && (
+            <div className="mt-1.5 flex items-center justify-center gap-3 text-[11px] font-mono text-white/65">
+              <span><b className="text-good">{basariliSayisi}</b> basarili</span>
+              <span className="opacity-40">·</span>
+              <span><b className="text-bad">{bilinmeyenSayisi}</b> bilinmeyen</span>
+              <span className="opacity-40">·</span>
+              <span><b className="text-white">{sayac}</b> toplam</span>
             </div>
           )}
 
