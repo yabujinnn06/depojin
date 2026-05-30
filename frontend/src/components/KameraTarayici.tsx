@@ -368,6 +368,16 @@ export default function KameraTarayici({ onKod, sonuc, ozet }: Props) {
     const dur = sonAktif?.sonuc?.durum;
     const Ikon = dur && D_IKON[dur];
     const sayilanYuzde = ozet && ozet.toplam_seri > 0 ? Math.round(ozet.sayilan_seri / ozet.toplam_seri * 100) : 0;
+    const stokKodu = sonAktif?.sonuc?.stok_kodu ?? null;
+    const stokTaramaSayisi = stokKodu
+      ? gecmis.filter(k => k.sonuc?.stok_kodu === stokKodu).length
+      : 0;
+    const stokSayilan = sonAktif?.sonuc?.sayilan ?? 0;
+    const stokToplam = sonAktif?.sonuc?.toplam ?? 0;
+    const stokKalan = sonAktif?.sonuc?.kalan ?? (stokToplam - stokSayilan);
+    const stokYuzde = stokToplam > 0 ? Math.min(100, Math.round((stokSayilan / stokToplam) * 100)) : 0;
+    const stokPortal = sonAktif?.sonuc?.portal_sayim ?? null;
+    const stokFark = sonAktif?.sonuc?.portal_fark;
     const tamBody = (
       <div className="fixed inset-0 z-[55] bg-deeper text-white flex flex-col"
         style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
@@ -415,38 +425,41 @@ export default function KameraTarayici({ onKod, sonuc, ozet }: Props) {
                   {new Date(sonAktif.ts).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                 </span>
               </div>
-              {sonAktif.sonuc?.stok_kodu && (
-                <div className="mt-1 text-sm">
-                  <span className="font-mono font-bold text-accent">{sonAktif.sonuc.stok_kodu}</span>
-                  <span className="text-white/80"> · {sonAktif.sonuc.urun_adi}</span>
+              {stokKodu && (
+                <div className="mt-1.5 text-sm">
+                  <span className="font-mono font-bold text-accent">{stokKodu}</span>
+                  <span className="text-white/80"> · {sonAktif.sonuc?.urun_adi}</span>
                 </div>
               )}
-              {sonAktif.sonuc && sonAktif.sonuc.toplam != null && (
-                <div className="mt-1 grid grid-cols-3 gap-2 text-sm font-mono">
-                  <div>
-                    <div className="text-[9px] uppercase tracking-wider text-white/55">Bu Stok</div>
-                    <div className="text-base font-bold">{sonAktif.sonuc.sayilan}/{sonAktif.sonuc.toplam}</div>
+              {stokKodu && stokToplam > 0 && (
+                <>
+                  <div className="mt-2 grid grid-cols-4 gap-1.5">
+                    <KStat etiket="Bizde Var" deger={stokSayilan} renk="text-good" buyuk />
+                    <KStat etiket="Stokta" deger={stokToplam} renk="text-white" />
+                    <KStat etiket="Portal" deger={stokPortal ?? 0} renk="text-sky-300" />
+                    <KStat etiket="Fark"
+                      deger={stokFark ?? 0}
+                      renk={stokFark == null ? "text-white/50"
+                        : stokFark === 0 ? "text-good"
+                        : stokFark > 0 ? "text-warn"
+                        : "text-bad"}
+                      isaret />
                   </div>
-                  {sonAktif.sonuc.portal_sayim != null && (
-                    <div>
-                      <div className="text-[9px] uppercase tracking-wider text-white/55">Portal</div>
-                      <div className="text-base font-bold">{sonAktif.sonuc.portal_sayim}</div>
-                    </div>
-                  )}
-                  {sonAktif.sonuc.portal_fark != null && (
-                    <div>
-                      <div className="text-[9px] uppercase tracking-wider text-white/55">Fark</div>
-                      <div className={cn("text-base font-bold",
-                        sonAktif.sonuc.portal_fark === 0 ? "text-good"
-                          : sonAktif.sonuc.portal_fark > 0 ? "text-warn"
-                          : "text-bad")}>
-                        {sonAktif.sonuc.portal_fark > 0 ? "+" : ""}{sonAktif.sonuc.portal_fark}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  <div className="mt-2 h-2 rounded-full bg-white/10 overflow-hidden">
+                    <div className={cn("h-full transition-all",
+                      stokKalan === 0 ? "bg-good" : "bg-accent")}
+                      style={{ width: `${stokYuzde}%` }} />
+                  </div>
+                  <div className="mt-1 flex items-center justify-between text-[11px] font-mono text-white/65">
+                    <span>%{stokYuzde} tamamlandi</span>
+                    <span>Kalan: <b className={stokKalan === 0 ? "text-good" : "text-amber-300"}>{stokKalan}</b></span>
+                    {stokTaramaSayisi > 1 && (
+                      <span>Bu stoga {stokTaramaSayisi}. okuma</span>
+                    )}
+                  </div>
+                </>
               )}
-              {sonAktif.sonuc?.mesaj && !sonAktif.sonuc?.stok_kodu && (
+              {sonAktif.sonuc?.mesaj && !stokKodu && (
                 <div className="mt-1 text-xs text-white/80">{sonAktif.sonuc.mesaj}</div>
               )}
             </div>
@@ -562,6 +575,18 @@ export default function KameraTarayici({ onKod, sonuc, ozet }: Props) {
           </AnimatePresence>
         </div>
       )}
+    </div>
+  );
+}
+
+function KStat({ etiket, deger, renk, isaret, buyuk }: { etiket: string; deger: number; renk: string; isaret?: boolean; buyuk?: boolean }) {
+  return (
+    <div className="rounded-md bg-white/8 px-1.5 py-1 ring-1 ring-white/12 text-center">
+      <div className="text-[8.5px] uppercase tracking-[0.14em] text-white/55 leading-none">{etiket}</div>
+      <div className={cn("font-display font-bold leading-none tabular-nums mt-1", renk,
+        buyuk ? "text-2xl" : "text-lg")}>
+        {isaret && deger > 0 ? "+" : ""}{deger}
+      </div>
     </div>
   );
 }
