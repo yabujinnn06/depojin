@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Camera, FlashlightOff, Flashlight, RefreshCcw, Maximize2, Minimize2, Zap, CheckCircle2, AlertTriangle, XCircle, GitMerge } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
@@ -275,9 +276,11 @@ export default function KameraTarayici({ onKod, sonuc }: Props) {
     setSecCihaz(next.deviceId);
   }
 
-  return (
-    <div className={cn("space-y-2", tam && "fixed inset-0 z-50 bg-deeper p-3 sm:p-6 flex flex-col")}>
-      <div className="relative overflow-hidden rounded-xl bg-deeper aspect-[4/3] sm:aspect-video">
+  const icerik = (
+    <div className={cn("space-y-2", tam && "fixed inset-0 z-[55] bg-deeper p-3 sm:p-6 flex flex-col overflow-auto")}
+      style={tam ? { paddingTop: "max(0.75rem, env(safe-area-inset-top))" } : undefined}>
+      <div className={cn("relative overflow-hidden rounded-xl bg-deeper",
+        tam ? "w-full max-w-3xl mx-auto aspect-video shrink-0" : "aspect-[4/3] sm:aspect-video")}>
         <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover"
           playsInline muted autoPlay />
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -418,12 +421,17 @@ export default function KameraTarayici({ onKod, sonuc }: Props) {
         </div>
       )}
 
-      <div className="text-[11px] text-ink/55 flex items-center gap-2 flex-wrap">
+      <div className={cn("text-[11px] flex items-center gap-2 flex-wrap",
+        tam ? "text-white/65" : "text-ink/55")}>
         <Camera size={12} />
         <span>Cerceveye yerlestir; otomatik okur. {torchVar && otoTorch ? "Karanlikta oto-flas devreye girer." : ""}</span>
       </div>
     </div>
   );
+
+  return tam && typeof document !== "undefined"
+    ? createPortal(icerik, document.body)
+    : icerik;
 }
 
 function Kose({ pos }: { pos: "tl" | "tr" | "bl" | "br" }) {
